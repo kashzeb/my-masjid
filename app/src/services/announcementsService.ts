@@ -1,4 +1,4 @@
-import { collection, query, where, orderBy, limit, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, type Unsubscribe } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
 import { MASJID_ID } from '@/constants/masjid';
 import type { Announcement } from '@/models';
@@ -42,4 +42,36 @@ export function subscribeToAnnouncements(
     },
     onError
   );
+}
+
+export async function createAnnouncement(title: string, body: string, createdBy: string): Promise<void> {
+  const ref = collection(firestore, 'masjids', MASJID_ID, 'announcements');
+  await addDoc(ref, {
+    title,
+    body,
+    createdAt: serverTimestamp(),
+    createdBy,
+    updatedAt: null,
+    updatedBy: null,
+    deleted: false,
+    notified: false,
+    expiresAt: null,
+  });
+}
+
+export async function updateAnnouncement(id: string, title: string, body: string, updatedBy: string): Promise<void> {
+  const ref = doc(firestore, 'masjids', MASJID_ID, 'announcements', id);
+  await updateDoc(ref, { title, body, updatedAt: serverTimestamp(), updatedBy });
+}
+
+/**
+ * Soft delete only - an update, not deleteDoc, per Database Design §3.3.
+ * Firestore rules explicitly forbid hard deletes (`allow delete: if false`)
+ * so an accidental deletion is always recoverable by an admin flipping
+ * `deleted` back to false directly in the Console, even though there's no
+ * "restore" button in the Phase 1 UI.
+ */
+export async function softDeleteAnnouncement(id: string, updatedBy: string): Promise<void> {
+  const ref = doc(firestore, 'masjids', MASJID_ID, 'announcements', id);
+  await updateDoc(ref, { deleted: true, updatedAt: serverTimestamp(), updatedBy });
 }

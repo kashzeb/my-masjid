@@ -61,7 +61,7 @@ export type RootStackParamList = {
   Dashboard: undefined;
   EditTimetable: undefined;
   AnnouncementList: undefined;
-  AnnouncementForm: undefined;
+  AnnouncementForm: { announcementId?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
