@@ -29,10 +29,10 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.border,
   },
   rowActive: {
-    backgroundColor: theme.colors.accentSoft,
+    backgroundColor: theme.colors.accentTintLight,
     marginHorizontal: -theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
-    borderRadius: 8,
+    paddingVertical: 14,
     borderTopWidth: 0,
   },
   label: { fontSize: theme.typography.body, color: theme.colors.textPrimary },

@@ -5,7 +5,12 @@ import { useTimetableStore } from '@/store/timetableStore';
 import { useCountdown } from './useCountdown';
 import { getTodayPrayerTimes, getMasjidToday } from '@/utils/dateTime';
 import NextEventCard from './components/NextEventCard';
+import MasjidHeader from './components/MasjidHeader';
 import TimeRow from '@/components/TimeRow';
+import Card from '@/components/Card';
+import LoadingIndicator from '@/components/LoadingIndicator';
+import OfflineBanner from '@/components/OfflineBanner';
+import ScreenContainer from '@/components/ScreenContainer';
 
 export default function HomeScreen() {
   const { timetable, masjid, status, error, fetch } = useTimetableStore();
@@ -13,9 +18,6 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetch();
-    // Refetch on foreground (Architecture SS6.3) - the simplest option we
-    // picked over a real-time listener, since edits are rare (~monthly)
-    // and this is cheap enough to just always do.
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') fetch();
     });
@@ -24,18 +26,18 @@ export default function HomeScreen() {
 
   if (status === 'error') {
     return (
-      <View style={styles.container}>
-        <Text style={styles.note}>Couldn't load timings.</Text>
-        <Text style={[styles.note, { marginTop: 8, fontSize: 12 }]}>{error}</Text>
-      </View>
+      <ScreenContainer style={styles.centered}>
+        <Text style={styles.errorTitle}>Couldn't load timings.</Text>
+        <Text style={styles.errorDetail}>{error}</Text>
+      </ScreenContainer>
     );
   }
 
   if (!timetable || !masjid) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.note}>Loading today's timings...</Text>
-      </View>
+      <ScreenContainer style={styles.centered}>
+        <LoadingIndicator label="Loading today's timings..." />
+      </ScreenContainer>
     );
   }
 
@@ -43,53 +45,45 @@ export default function HomeScreen() {
   const todayDate = getMasjidToday(masjid.timezone).format('dddd, D MMMM');
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.masjidName}>{masjid.name}</Text>
-        <Text style={styles.date}>{todayDate}</Text>
-      </View>
+    <ScreenContainer>
+      <ScrollView contentContainerStyle={styles.content}>
+        <MasjidHeader name={masjid.name} dateLabel={todayDate} />
 
-      {countdown && <NextEventCard event={countdown.event} countdownLabel={countdown.countdownLabel} />}
+        <Card style={styles.outerCard}>
+          {countdown && <NextEventCard event={countdown.event} countdownLabel={countdown.countdownLabel} />}
 
-      {status === 'offline-cached' && (
-        <Text style={styles.offlineNote}>Showing saved timings - may not be up to date</Text>
-      )}
+          {status === 'offline-cached' && <OfflineBanner />}
 
-      <Text style={styles.sectionLabel}>Today</Text>
-      <View style={styles.list}>
-        {today.map((row) => (
-          <TimeRow
-            key={row.prayer}
-            label={row.label}
-            azan={row.azan}
-            jamaat={row.jamaat}
-            active={countdown?.event.prayer === row.prayer}
-          />
-        ))}
-      </View>
-    </ScrollView>
+          <Text style={styles.sectionLabel}>Today</Text>
+          <View style={styles.list}>
+            {today.map((row) => (
+              <TimeRow
+                key={row.prayer}
+                label={row.label}
+                azan={row.azan}
+                jamaat={row.jamaat}
+                active={countdown?.event.prayer === row.prayer}
+              />
+            ))}
+          </View>
+        </Card>
+      </ScrollView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.surface },
-  content: { paddingBottom: theme.spacing.xl },
-  header: { paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.lg },
-  masjidName: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, marginBottom: 2 },
-  date: { fontSize: theme.typography.title, fontWeight: '500', color: theme.colors.textPrimary, marginBottom: theme.spacing.lg },
-  offlineNote: {
-    fontSize: theme.typography.caption,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
-    marginBottom: theme.spacing.md,
-  },
+  content: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl },
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  outerCard: { paddingTop: theme.spacing.lg, paddingBottom: theme.spacing.md },
   sectionLabel: {
-    fontSize: theme.typography.caption,
-    fontWeight: '500',
-    color: theme.colors.textSecondary,
+    fontSize: theme.typography.title,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
     paddingHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.sm,
   },
   list: { paddingHorizontal: theme.spacing.lg },
-  note: { fontSize: theme.typography.caption, color: theme.colors.textSecondary },
+  errorTitle: { fontSize: theme.typography.body, fontWeight: '500', color: theme.colors.textPrimary, textAlign: 'center' },
+  errorDetail: { fontSize: 12, color: theme.colors.textSecondary, textAlign: 'center', marginTop: 8, paddingHorizontal: theme.spacing.lg },
 });

@@ -24,7 +24,26 @@ const Tab = createBottomTabNavigator<PublicTabParamList>();
 
 function PublicTabs() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.colors.accent }}>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.accent,
+        tabBarInactiveTintColor: theme.colors.textMuted,
+        tabBarShowLabel: true,
+        tabBarStyle: {
+          height: 64,
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 0.5,
+          borderTopColor: theme.colors.border,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOpacity: 0.06,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: -3 },
+        },
+        tabBarItemStyle: { paddingVertical: 6 },
+      }}
+    >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Announcements" component={AnnouncementsScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
