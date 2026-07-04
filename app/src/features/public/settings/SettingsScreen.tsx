@@ -3,32 +3,48 @@ import { theme } from '@/constants/theme';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/app/RootNavigator';
+import { useAuthStore } from '@/store/authStore';
+import ScreenContainer from '@/components/ScreenContainer';
+import Card from '@/components/Card';
 
-// M0 stub — real toggles arrive in M8. The "Masjid admin" link is wired now
-// because it's the entry point into the admin stack (Navigation Flow §3.1)
-// and needs to exist for M0's "all 8 screens reachable" definition of done.
-//
-// Settings is a screen inside the PublicTabs navigator, but "Login" lives on
-// the parent root stack — this needs the root stack's navigation object
-// specifically (a plain screen-props type here would only see sibling tabs).
+// M0 stub still for the notification toggles (arriving in M8) - but the
+// admin entry point is now real: checks actual auth state (Navigation Flow
+// SS3.2) rather than always routing to Login.
 export default function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const user = useAuthStore((s) => s.user);
+
+  const handleAdminPress = () => {
+    navigation.navigate(user ? 'Dashboard' : 'Login');
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-      <Text style={styles.note}>Notification toggles arrive in M8</Text>
-      <Pressable onPress={() => navigation.navigate('Login')} style={styles.adminLink}>
-        <Text style={styles.adminLinkText}>Masjid admin</Text>
-      </Pressable>
-    </View>
+    <ScreenContainer>
+      <View style={styles.content}>
+        <Text style={styles.heading}>Settings</Text>
+        <Card style={styles.card}>
+          <Text style={styles.note}>Notification toggles arrive in M8</Text>
+        </Card>
+        <Pressable onPress={handleAdminPress} style={styles.adminLink}>
+          <Text style={styles.adminLinkText}>Masjid admin</Text>
+        </Pressable>
+      </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface },
-  title: { fontSize: theme.typography.title, color: theme.colors.textPrimary, fontWeight: '500' },
-  note: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, marginTop: 8 },
-  adminLink: { marginTop: 32, padding: 12 },
+  content: { flex: 1, padding: theme.spacing.md },
+  heading: {
+    fontSize: theme.typography.heading,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  card: { padding: theme.spacing.lg, alignItems: 'center' },
+  note: { fontSize: theme.typography.caption, color: theme.colors.textSecondary },
+  adminLink: { marginTop: theme.spacing.lg, padding: 12, alignItems: 'center' },
   adminLinkText: { fontSize: theme.typography.body, color: theme.colors.textMuted },
 });

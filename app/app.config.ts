@@ -14,7 +14,7 @@ const config: ExpoConfig = {
   android: {
     package: 'org.noormasjid.mymasjid',
   },
-  plugins: ['expo-notifications', 'expo-font', 'expo-image', 'expo-splash-screen', 'expo-status-bar'],
+  plugins: ['expo-notifications', 'expo-font', 'expo-image', 'expo-splash-screen', 'expo-status-bar', '@react-native-community/datetimepicker'],
   extra: {
     appEnv: APP_ENV,
   },

@@ -1,7 +1,7 @@
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
-import { MASJID_ID, PRAYERS } from '@/constants/masjid';
-import type { Timetable, Masjid } from '@/models';
+import { MASJID_ID, PRAYERS, type PrayerName } from '@/constants/masjid';
+import type { Timetable, Masjid, PrayerTime } from '@/models';
 
 /**
  * One-time fetch, not a real-time listener — the timetable changes ~monthly,
@@ -48,4 +48,20 @@ export async function getMasjid(): Promise<Masjid> {
     timezone: data.timezone,
     createdAt: data.createdAt?.toMillis?.() ?? Date.now(),
   };
+}
+
+/**
+ * The write side of Architecture §5 Scenario A: overwrites the single
+ * timetable document in place — no versioning, no "valid from," per the
+ * Current Timetable Principle (Database Design §3.2). Nothing else needs to
+ * run synchronously after this, since prayer notifications are entirely
+ * client-scheduled (Architecture §4.3) — the write is just a write.
+ */
+export async function updateTimetable(values: Record<PrayerName, PrayerTime>, updatedBy: string): Promise<void> {
+  const ref = doc(firestore, 'masjids', MASJID_ID, 'timetable', 'current');
+  await setDoc(ref, {
+    ...values,
+    updatedAt: serverTimestamp(),
+    updatedBy,
+  });
 }
