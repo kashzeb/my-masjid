@@ -1,0 +1,23 @@
+import type { ExpoConfig } from 'expo/config';
+
+// APP_ENV switches which Firebase project the app talks to (Architecture §7).
+// Set via EAS build profile or `APP_ENV=dev npx expo start`.
+const APP_ENV = process.env.APP_ENV ?? 'dev';
+
+const config: ExpoConfig = {
+  name: 'My Masjid',
+  slug: 'my-masjid',
+  version: '0.1.0',
+  orientation: 'portrait',
+  userInterfaceStyle: 'automatic',
+  ios: { supportsTablet: false, bundleIdentifier: 'org.noormasjid.mymasjid' },
+  android: {
+    package: 'org.noormasjid.mymasjid',
+  },
+  plugins: ['expo-notifications', 'expo-font', 'expo-image', 'expo-splash-screen', 'expo-status-bar'],
+  extra: {
+    appEnv: APP_ENV,
+  },
+};
+
+export default config;

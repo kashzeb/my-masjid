@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin(masjidId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/masjids/$(masjidId)/admins/$(request.auth.uid));
+    }
+
+    match /masjids/{masjidId} {
+      allow read: if true;
+      allow write: if false; // masjid profile is not editable via the app in Phase 1
+
+      match /timetable/{docId} {
+        allow read: if true;
+        allow write: if isAdmin(masjidId);
+      }
+
+      match /announcements/{announcementId} {
+        allow read: if resource.data.deleted == false;
+        allow create, update: if isAdmin(masjidId);
+        allow delete: if false; // hard delete never allowed — soft delete via update only
+      }
+
+      match /admins/{adminUid} {
+        allow read: if false;  // no client, including the admin themself, needs to read this
+        allow write: if false; // provisioned only via Firebase Console / Admin SDK
+      }
+    }
+  }
+}
