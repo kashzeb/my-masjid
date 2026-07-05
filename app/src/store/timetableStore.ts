@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTimetable, getMasjid } from '@/services/timetableService';
 import { scheduleUpcomingPrayerNotifications } from '@/services/notificationService';
+import { usePreferencesStore } from './preferencesStore';
 import type { Timetable, Masjid } from '@/models';
 
 const CACHE_KEY = 'my-masjid:timetable-cache-v1';
@@ -53,10 +54,13 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
       // Reschedule local notifications from the fresh data — this single
       // call site covers both trigger points from Architecture §4.3
       // (foreground refresh AND immediately after an admin save), since
-      // both already route through this same fetch() action. Errors here
+      // both already route through this same fetch() action. Uses the
+      // user's real saved preferences (M8), not the all-enabled default,
+      // so a toggle change sticks across app restarts too. Errors here
       // are logged, not thrown - a notification-scheduling hiccup should
       // never block the timetable itself from loading.
-      scheduleUpcomingPrayerNotifications(timetable, masjid.timezone).catch((err) =>
+      const { prayerPrefs } = usePreferencesStore.getState();
+      scheduleUpcomingPrayerNotifications(timetable, masjid.timezone, prayerPrefs).catch((err) =>
         console.warn('[notifications] failed to reschedule:', err)
       );
     } catch (err) {
