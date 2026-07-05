@@ -1,4 +1,4 @@
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef, type NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { theme } from '@/constants/theme';
@@ -56,7 +56,7 @@ function PublicTabs() {
 // authenticated when deep-linking to Dashboard) arrives in M3 alongside
 // authStore — this skeleton just makes every route reachable.
 export type RootStackParamList = {
-  PublicTabs: undefined;
+  PublicTabs: NavigatorScreenParams<PublicTabParamList> | undefined;
   Login: undefined;
   Dashboard: undefined;
   EditTimetable: undefined;
@@ -64,11 +64,16 @@ export type RootStackParamList = {
   AnnouncementForm: { announcementId?: string } | undefined;
 };
 
+// Lets code outside the React tree (the notification-tap handler in App.tsx)
+// navigate without needing a component's own navigation prop - the
+// standard React Navigation pattern for this exact situation.
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerTitleStyle: { fontWeight: '500' } }}>
         <Stack.Screen name="PublicTabs" component={PublicTabs} options={{ headerShown: false }} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Admin login' }} />

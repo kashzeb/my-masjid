@@ -17,6 +17,9 @@ const config: ExpoConfig = {
   plugins: ['expo-notifications', 'expo-font', 'expo-image', 'expo-splash-screen', 'expo-status-bar', '@react-native-community/datetimepicker'],
   extra: {
     appEnv: APP_ENV,
+    eas: {
+      projectId: '66c490d2-9ba1-4a3e-9668-160302757d2b',
+    },
   },
 };
 

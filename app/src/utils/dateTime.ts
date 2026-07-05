@@ -47,9 +47,11 @@ function masjidNow(timezoneName: string): dayjs.Dayjs {
  * Parses a stored "HH:mm" wall-clock string into a real instant, for a given
  * calendar day, in the Masjid's local time (Database Design §3.2 — these are
  * repeating daily times, not absolute timestamps, so "today" or "tomorrow"
- * has to be supplied by the caller).
+ * has to be supplied by the caller). Exported for reuse by the notification
+ * service (Architecture §4.3) — one fixed-offset implementation, not two
+ * that could silently drift apart.
  */
-function toInstant(timeStr: string, timezoneName: string, dayOffset: number): dayjs.Dayjs {
+export function getInstantForTime(timeStr: string, timezoneName: string, dayOffset: number): dayjs.Dayjs {
   const [hour, minute] = timeStr.split(':').map(Number);
   return masjidNow(timezoneName).add(dayOffset, 'day').hour(hour).minute(minute).second(0).millisecond(0);
 }
@@ -62,7 +64,7 @@ function buildDayEvents(timetable: Timetable, timezoneName: string, dayOffset: n
       prayer,
       kind,
       label: `${PRAYER_LABELS[prayer]} ${kind}`,
-      at: toInstant(times[kind], timezoneName, dayOffset),
+      at: getInstantForTime(times[kind], timezoneName, dayOffset),
     }));
   }).sort((a, b) => a.at.valueOf() - b.at.valueOf());
 }
