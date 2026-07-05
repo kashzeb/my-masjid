@@ -11,15 +11,18 @@ import { timetableFormSchema, type TimetableFormValues } from './timetableFormSc
 import PrayerTimetableFormRow from './components/PrayerTimetableFormRow';
 import PrimaryButton from '@/components/PrimaryButton';
 import ScreenContainer from '@/components/ScreenContainer';
+import Dialog from '@/components/Dialog';
+import { navigationRef } from '@/app/navigationRef';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '@/app/RootNavigator';
+import type { SettingsStackParamList } from '@/app/RootNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'EditTimetable'>;
+type Props = NativeStackScreenProps<SettingsStackParamList, 'EditTimetable'>;
 
 export default function EditTimetableScreen({ navigation }: Props) {
   const { timetable, fetch } = useTimetableStore();
   const user = useAuthStore((s) => s.user);
   const [submitting, setSubmitting] = useState(false);
+  const [showSavedDialog, setShowSavedDialog] = useState(false);
 
   const { control, handleSubmit, reset } = useForm<TimetableFormValues>({
     resolver: zodResolver(timetableFormSchema),
@@ -39,17 +42,21 @@ export default function EditTimetableScreen({ navigation }: Props) {
       // Architecture SS5 Scenario A - editing is "just a write" with no
       // separate recalculation step needed.
       await fetch();
-      Alert.alert('Saved', 'Timings updated for everyone.', [
-        { text: 'Stay here', style: 'cancel' },
-        // navigate() (not push) pops back to the existing Dashboard
-        // instance already on the stack, rather than stacking a duplicate.
-        { text: 'Go to Dashboard', onPress: () => navigation.navigate('Dashboard') },
-      ]);
+      setShowSavedDialog(true);
     } catch (err) {
       Alert.alert('Could not save', err instanceof Error ? err.message : String(err));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const goToHome = () => {
+    setShowSavedDialog(false);
+    // EditTimetable now lives nested inside the Settings tab's own stack
+    // (per feedback - keeps the bottom tab bar visible everywhere), so
+    // reaching a *different* tab needs the global navigationRef rather
+    // than this screen's own (Settings-stack-scoped) navigation prop.
+    navigationRef.navigate('Home');
   };
 
   if (!timetable) {
@@ -78,6 +85,16 @@ export default function EditTimetableScreen({ navigation }: Props) {
           <PrimaryButton label="Save timetable" onPress={handleSubmit(onSubmit)} loading={submitting} />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Dialog
+        visible={showSavedDialog}
+        title="Saved"
+        message="Timings updated for everyone."
+        buttons={[
+          { label: 'Stay here', onPress: () => setShowSavedDialog(false), variant: 'secondary' },
+          { label: 'Go to Home', onPress: goToHome, variant: 'primary' },
+        ]}
+      />
     </ScreenContainer>
   );
 }
@@ -89,5 +106,4 @@ const styles = StyleSheet.create({
   heading: { fontSize: theme.typography.heading, fontWeight: '700', color: theme.colors.textPrimary, paddingHorizontal: theme.spacing.sm, marginBottom: 4 },
   subheading: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, paddingHorizontal: theme.spacing.sm, marginBottom: theme.spacing.lg },
   note: { fontSize: theme.typography.caption, color: theme.colors.textSecondary },
-  savedNote: { fontSize: theme.typography.caption, color: theme.colors.accent, textAlign: 'center', marginBottom: theme.spacing.md, fontWeight: '600' },
 });

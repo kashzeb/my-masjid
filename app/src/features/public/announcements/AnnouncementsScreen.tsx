@@ -3,11 +3,14 @@ import { ScrollView, Text, StyleSheet } from 'react-native';
 import { theme } from '@/constants/theme';
 import { useAnnouncementsStore } from '@/store/announcementsStore';
 import ScreenContainer from '@/components/ScreenContainer';
-import Card from '@/components/Card';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import EmptyState from '@/components/EmptyState';
 import AnnouncementCard from '@/components/AnnouncementCard';
 
+// No outer wrapping Card here anymore - matches the design system's
+// reference pattern (HomeScreen.jsx's "Today's Events" section), where
+// each item is its own standalone card with a gap between them, rather
+// than nested inside one big container card.
 export default function AnnouncementsScreen() {
   const { announcements, status, error, subscribe, unsubscribe } = useAnnouncementsStore();
 
@@ -21,21 +24,19 @@ export default function AnnouncementsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.heading}>Announcements</Text>
 
-        <Card style={styles.card}>
-          {status === 'loading' && <LoadingIndicator label="Loading announcements..." />}
+        {status === 'loading' && <LoadingIndicator label="Loading announcements..." />}
 
-          {status === 'error' && (
-            <Text style={styles.errorText}>Couldn't load announcements. {error}</Text>
-          )}
+        {status === 'error' && (
+          <Text style={styles.errorText}>Couldn't load announcements. {error}</Text>
+        )}
 
-          {status === 'loaded' && announcements.length === 0 && (
-            <EmptyState message="No announcements yet. Check back soon." />
-          )}
+        {status === 'loaded' && announcements.length === 0 && (
+          <EmptyState message="No announcements yet. Check back soon." />
+        )}
 
-          {announcements.map((item) => (
-            <AnnouncementCard key={item.id} title={item.title} body={item.body} createdAt={item.createdAt} />
-          ))}
-        </Card>
+        {announcements.map((item) => (
+          <AnnouncementCard key={item.id} title={item.title} body={item.body} createdAt={item.createdAt} />
+        ))}
       </ScrollView>
     </ScreenContainer>
   );
@@ -47,11 +48,10 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.heading,
     fontWeight: '700',
     color: theme.colors.textPrimary,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.sm,
     paddingTop: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
   },
-  card: { padding: theme.spacing.md },
   errorText: {
     fontSize: theme.typography.caption,
     color: theme.colors.textSecondary,

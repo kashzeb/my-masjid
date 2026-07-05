@@ -20,5 +20,5 @@ export default function ScreenContainer({ children, style }: ScreenContainerProp
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.surfaceMuted },
+  container: { flex: 1, backgroundColor: theme.colors.surfacePage },
 });

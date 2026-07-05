@@ -8,12 +8,12 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ email, onLogout }: AdminHeaderProps) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.card, theme.shadow.sm]}>
       <View>
         <Text style={styles.label}>Signed in as</Text>
         <Text style={styles.email}>{email}</Text>
       </View>
-      <Pressable onPress={onLogout}>
+      <Pressable onPress={onLogout} style={styles.logoutButton}>
         <Text style={styles.logout}>Log out</Text>
       </Pressable>
     </View>
@@ -21,15 +21,19 @@ export default function AdminHeader({ email, onLogout }: AdminHeaderProps) {
 }
 
 const styles = StyleSheet.create({
-  row: {
+  card: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.control,
+    padding: theme.spacing.md,
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.sm3,
     marginBottom: theme.spacing.lg,
   },
   label: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, marginBottom: 2 },
-  email: { fontSize: theme.typography.title, fontWeight: '700', color: theme.colors.textPrimary },
-  logout: { fontSize: theme.typography.caption, color: theme.colors.textMuted, paddingTop: 4 },
+  email: { fontSize: theme.typography.subheading, fontWeight: '700', color: theme.colors.textPrimary },
+  logoutButton: { backgroundColor: theme.colors.accentSubtle, borderRadius: theme.radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
+  logout: { fontSize: theme.typography.caption, color: theme.colors.textPrimary, fontWeight: '600' },
 });

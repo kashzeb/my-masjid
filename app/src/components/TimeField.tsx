@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
   },
   valueText: { fontSize: theme.typography.body, color: theme.colors.textPrimary },
-  error: { color: '#B3261E', fontSize: 11, marginTop: 4 },
+  error: { color: theme.colors.danger, fontSize: 11, marginTop: 4 },
   modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' },
   modalSheet: { backgroundColor: theme.colors.surface, borderTopLeftRadius: theme.radius.card, borderTopRightRadius: theme.radius.card },
   modalHeader: {

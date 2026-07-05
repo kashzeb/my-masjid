@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { theme } from '@/constants/theme';
 
 interface MasjidHeaderProps {
@@ -7,12 +7,9 @@ interface MasjidHeaderProps {
 }
 
 export default function MasjidHeader({ name, dateLabel }: MasjidHeaderProps) {
-  const initial = name.trim().charAt(0).toUpperCase();
   return (
     <View style={styles.row}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{initial}</Text>
-      </View>
+      <Image source={require('../../../../../assets/masjid-avatar.png')} style={styles.avatar} />
       <View style={styles.textColumn}>
         <Text style={styles.masjidName}>{name}</Text>
         <Text style={styles.date}>{dateLabel}</Text>
@@ -33,12 +30,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: theme.colors.accentTintLight,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: theme.spacing.md,
+    backgroundColor: theme.colors.prayerSubtle,
   },
-  avatarText: { fontSize: 18, fontWeight: '700', color: theme.colors.accent },
   textColumn: { flex: 1 },
   masjidName: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, fontWeight: '500', marginBottom: 2 },
   date: { fontSize: theme.typography.heading, fontWeight: '700', color: theme.colors.textPrimary },

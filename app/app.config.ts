@@ -10,9 +10,11 @@ const config: ExpoConfig = {
   version: '0.1.0',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
+  icon: './assets/icon.png',
   ios: { supportsTablet: false, bundleIdentifier: 'org.noormasjid.mymasjid' },
   android: {
     package: 'org.noormasjid.mymasjid',
+    adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#03532D' },
   },
   plugins: ['expo-notifications', 'expo-font', 'expo-image', 'expo-splash-screen', 'expo-status-bar', '@react-native-community/datetimepicker'],
   extra: {

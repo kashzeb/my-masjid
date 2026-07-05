@@ -85,13 +85,15 @@ export function getNextEvent(timetable: Timetable, timezoneName: string, now = m
   return buildDayEvents(timetable, timezoneName, 1)[0];
 }
 
-/** Formats a duration for the countdown display: "18 min" or "2h 14m". */
+/** Formats a duration for the countdown display, now including seconds: "18:42" or "2:14:06". */
 export function formatCountdown(target: dayjs.Dayjs, now: dayjs.Dayjs): string {
-  const totalMinutes = Math.max(0, Math.round(target.diff(now, 'second') / 60));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours === 0) return `${minutes} min`;
-  return `${hours}h ${minutes}m`;
+  const totalSeconds = Math.max(0, target.diff(now, 'second'));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  if (hours === 0) return `${pad(minutes)}:${pad(seconds)}`;
+  return `${hours}:${pad(minutes)}:${pad(seconds)}`;
 }
 
 /** The Masjid's current local date, formatted for the Home screen header. */

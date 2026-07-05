@@ -1,33 +1,35 @@
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { theme } from '@/constants/theme';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '@/app/RootNavigator';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { SettingsStackParamList } from '@/app/RootNavigator';
 import { useAuthStore } from '@/store/authStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import { useTimetableStore } from '@/store/timetableStore';
 import { scheduleUpcomingPrayerNotifications } from '@/services/notificationService';
+import { showToast } from '@/store/toastStore';
 import { PRAYERS, PRAYER_LABELS, type PrayerName } from '@/constants/masjid';
 import ScreenContainer from '@/components/ScreenContainer';
 import Card from '@/components/Card';
 import Toggle from '@/components/Toggle';
 
-export default function SettingsScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+type Props = NativeStackScreenProps<SettingsStackParamList, 'SettingsHome'>;
+
+export default function SettingsScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const { prayerPrefs, announcementsEnabled, setPrayerPref, setAnnouncementsEnabled } = usePreferencesStore();
   const { timetable, masjid } = useTimetableStore();
 
   const handleAdminPress = () => {
+    // Login and Dashboard are now siblings of Settings in the same nested
+    // stack (see RootNavigator) - no more cross-navigator hack needed here.
     navigation.navigate(user ? 'Dashboard' : 'Login');
   };
 
-  // Rescheduling lives here, not inside preferencesStore, specifically to
-  // avoid a require cycle between preferencesStore and timetableStore -
-  // this screen already has both pieces of data via hooks, so it's the
-  // natural place for the two to meet.
+  // Rescheduling lives here (not inside preferencesStore) to avoid a
+  // require cycle between preferencesStore and timetableStore.
   const handlePrayerToggle = async (prayer: PrayerName, enabled: boolean) => {
     await setPrayerPref(prayer, enabled);
+    showToast(`${PRAYER_LABELS[prayer]} notifications ${enabled ? 'enabled' : 'disabled'}`, enabled ? 'success' : 'default');
     if (timetable && masjid) {
       const nextPrefs = { ...prayerPrefs, [prayer]: enabled };
       scheduleUpcomingPrayerNotifications(timetable, masjid.timezone, nextPrefs).catch((err) =>
@@ -39,7 +41,12 @@ export default function SettingsScreen() {
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Settings</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.heading}>Settings</Text>
+          <Pressable onPress={handleAdminPress} style={styles.adminButton}>
+            <Text style={styles.adminButtonText}>Masjid Admin</Text>
+          </Pressable>
+        </View>
 
         <Card style={styles.card}>
           <Text style={styles.sectionLabel}>Notifications</Text>
@@ -59,10 +66,6 @@ export default function SettingsScreen() {
             <Toggle value={announcementsEnabled} onValueChange={setAnnouncementsEnabled} disabled />
           </View>
         </Card>
-
-        <Pressable onPress={handleAdminPress} style={styles.adminLink}>
-          <Text style={styles.adminLinkText}>Masjid admin</Text>
-        </Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -70,14 +73,23 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl },
-  heading: {
-    fontSize: theme.typography.heading,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
   },
+  heading: { fontSize: theme.typography.heading, fontWeight: '700', color: theme.colors.textPrimary, flex: 1 },
+  adminButton: {
+    backgroundColor: theme.colors.accent,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    flexShrink: 0,
+  },
+  adminButtonText: { fontSize: theme.typography.caption, fontWeight: '600', color: theme.colors.textOnAccent },
   card: { padding: theme.spacing.md },
   sectionLabel: {
     fontSize: theme.typography.caption,
@@ -97,7 +109,17 @@ const styles = StyleSheet.create({
   },
   rowLast: { marginBottom: 0 },
   rowLabel: { fontSize: theme.typography.body, color: theme.colors.textPrimary },
-  rowNote: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2, maxWidth: 220 },
-  adminLink: { marginTop: theme.spacing.lg, padding: 12, alignItems: 'center' },
-  adminLinkText: { fontSize: theme.typography.body, color: theme.colors.textMuted },
+  rowNote: { fontSize: 11, color: theme.colors.textTertiary, marginTop: 2, maxWidth: 220 },
+  adminButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.control,
+    paddingVertical: 16,
+    paddingHorizontal: theme.spacing.md,
+  },
+  adminButtonText: { fontSize: theme.typography.body, fontWeight: '600', color: theme.colors.textPrimary },
+  adminButtonChevron: { fontSize: 22, color: theme.colors.textTertiary },
 });

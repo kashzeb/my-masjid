@@ -29,5 +29,5 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     backgroundColor: theme.colors.surface,
   },
-  error: { color: '#B3261E', fontSize: theme.typography.caption, marginTop: 4 },
+  error: { color: theme.colors.danger, fontSize: theme.typography.caption, marginTop: 4 },
 });

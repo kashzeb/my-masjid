@@ -7,6 +7,9 @@ interface ToggleProps {
   disabled?: boolean;
 }
 
+// "On" state uses the general UI accent (near-black), not the masjid green -
+// a toggle switch isn't a prayer-identity moment, per the design system's
+// explicit reservation of green for the countdown hero and next-prayer row.
 export default function Toggle({ value, onValueChange, disabled }: ToggleProps) {
   return (
     <Pressable
@@ -34,8 +37,9 @@ const styles = StyleSheet.create({
     width: SIZE.thumb,
     height: SIZE.thumb,
     borderRadius: SIZE.thumb / 2,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     marginLeft: 3,
+    ...theme.shadow.sm,
   },
   thumbOn: { marginLeft: SIZE.width - SIZE.thumb - 3 },
 });

@@ -11,9 +11,9 @@ import TextField from '@/components/TextField';
 import PrimaryButton from '@/components/PrimaryButton';
 import ScreenContainer from '@/components/ScreenContainer';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '@/app/RootNavigator';
+import type { SettingsStackParamList } from '@/app/RootNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'AnnouncementForm'>;
+type Props = NativeStackScreenProps<SettingsStackParamList, 'AnnouncementForm'>;
 
 export default function AnnouncementFormScreen({ route, navigation }: Props) {
   const announcementId = route.params?.announcementId;

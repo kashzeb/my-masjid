@@ -8,11 +8,21 @@ interface TimeRowProps {
   active?: boolean; // highlights this row as the next prayer (Home screen only)
 }
 
+// Matches PrayerTimeRow.jsx: a small "Next" pill next to the name (not just
+// a tinted row), green-tinted background reserved for this prayer-identity
+// moment, tabular numerals on the times so they align cleanly.
 export default function TimeRow({ label, azan, jamaat, active = false }: TimeRowProps) {
   return (
     <View style={[styles.row, active && styles.rowActive]}>
-      <Text style={[styles.label, active && styles.labelActive]}>{label}</Text>
-      <Text style={[styles.times, active && styles.timesActive]}>
+      <View style={styles.nameGroup}>
+        <Text style={[styles.label, active && styles.labelActive]}>{label}</Text>
+        {active && (
+          <View style={styles.nextPill}>
+            <Text style={styles.nextPillText}>Next</Text>
+          </View>
+        )}
+      </View>
+      <Text style={styles.times}>
         Azan {azan} · Jamaat {jamaat}
       </Text>
     </View>
@@ -24,19 +34,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
+    paddingHorizontal: theme.spacing.sm3,
     borderTopWidth: 0.5,
     borderTopColor: theme.colors.border,
+    borderRadius: theme.radius.control,
   },
   rowActive: {
-    backgroundColor: theme.colors.accentTintLight,
-    marginHorizontal: -theme.spacing.lg,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: 14,
+    backgroundColor: theme.colors.prayerSubtle,
+    marginHorizontal: -theme.spacing.sm3,
+    paddingHorizontal: theme.spacing.sm3 + theme.spacing.sm3,
     borderTopWidth: 0,
   },
+  nameGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   label: { fontSize: theme.typography.body, color: theme.colors.textPrimary },
-  labelActive: { fontWeight: '500', color: theme.colors.accentSoftText },
-  times: { fontSize: theme.typography.caption, color: theme.colors.textSecondary },
-  timesActive: { color: theme.colors.accent, fontWeight: '500' },
+  labelActive: { fontWeight: '600' },
+  nextPill: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  nextPillText: { fontSize: 11, fontWeight: '600', color: theme.colors.prayerDark },
+  times: { fontSize: theme.typography.label, color: theme.colors.textSecondary, fontVariant: ['tabular-nums'] },
 });

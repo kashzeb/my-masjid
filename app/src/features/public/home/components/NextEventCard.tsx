@@ -7,13 +7,14 @@ interface NextEventCardProps {
   countdownLabel: string;
 }
 
+// The prayer countdown hero - the ONE place masjid green appears prominently,
+// per the design system's explicit intent to reserve it for prayer-identity
+// moments rather than use it as a generic UI color (that's what the new
+// near-black `accent` is for, used everywhere else).
 export default function NextEventCard({ event, countdownLabel }: NextEventCardProps) {
   return (
     <View style={styles.card}>
-      <View style={styles.pill}>
-        <Text style={styles.pillText}>Next Namaaz</Text>
-      </View>
-      <Text style={styles.eventLabel}>{event.label}</Text>
+      <Text style={styles.eyebrow}>Next — {event.label}</Text>
       <Text style={styles.countdown}>{countdownLabel}</Text>
     </View>
   );
@@ -21,21 +22,29 @@ export default function NextEventCard({ event, countdownLabel }: NextEventCardPr
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.accent,
-    borderRadius: theme.radius.card,
-    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.prayerDark,
+    borderRadius: theme.radius.heroCard,
+    paddingVertical: theme.spacing.xxl,
+    paddingHorizontal: theme.spacing.xl,
     marginHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
+    alignItems: 'center',
+    ...theme.shadow.md,
   },
-  pill: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: theme.radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    marginBottom: theme.spacing.md,
+  eyebrow: {
+    fontSize: theme.typography.countdownLabel,
+    fontWeight: '600',
+    color: theme.colors.textOnAccent,
+    opacity: 0.85,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  pillText: { fontSize: 12, fontWeight: '600', color: '#fff' },
-  eventLabel: { fontSize: 20, fontWeight: '600', color: '#fff', textTransform: 'capitalize', marginBottom: 4 },
-  countdown: { fontSize: 36, fontWeight: '700', color: '#fff' },
+  countdown: {
+    fontSize: theme.typography.countdown,
+    fontWeight: '800',
+    color: theme.colors.textOnAccent,
+    fontVariant: ['tabular-nums'],
+  },
 });
