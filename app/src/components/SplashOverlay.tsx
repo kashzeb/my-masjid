@@ -11,7 +11,7 @@ import { theme } from '@/constants/theme';
 export default function SplashOverlay() {
   return (
     <View style={styles.container}>
-      <Image source={require('../../assets/splash-bg.png')} style={styles.background} resizeMode="cover" />
+      <Image source={require('../../assets/splash-bg-v2.png')} style={styles.background} resizeMode="none" />
       <View style={styles.content}>
         <Text style={styles.name}>Noor Masjid</Text>
         <Text style={styles.tagline}>My Masjid</Text>
