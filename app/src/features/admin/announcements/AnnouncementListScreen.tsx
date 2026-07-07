@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { ScrollView, Text, Pressable, Alert, View, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ScrollView, Text, Pressable, View, StyleSheet } from 'react-native';
 import { theme } from '@/constants/theme';
 import { useAnnouncementsStore } from '@/store/announcementsStore';
 import { useAuthStore } from '@/store/authStore';
@@ -8,6 +8,7 @@ import ScreenContainer from '@/components/ScreenContainer';
 import LoadingIndicator from '@/components/LoadingIndicator';
 import EmptyState from '@/components/EmptyState';
 import AnnouncementCard from '@/components/AnnouncementCard';
+import Dialog from '@/components/Dialog';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '@/app/RootNavigator';
 
@@ -16,24 +17,23 @@ type Props = NativeStackScreenProps<SettingsStackParamList, 'AnnouncementList'>;
 export default function AnnouncementListScreen({ navigation }: Props) {
   const { announcements, status, error, subscribe, unsubscribe } = useAnnouncementsStore();
   const user = useAuthStore((s) => s.user);
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     subscribe();
     return () => unsubscribe();
   }, [subscribe, unsubscribe]);
 
-  const handleDelete = (id: string, title: string) => {
-    Alert.alert('Delete announcement?', `"${title}" will be removed from the feed.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          softDeleteAnnouncement(id, user?.uid ?? 'unknown').catch((err) =>
-            Alert.alert('Could not delete', err instanceof Error ? err.message : String(err))
-          ),
-      },
-    ]);
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const { id } = pendingDelete;
+    setPendingDelete(null);
+    try {
+      await softDeleteAnnouncement(id, user?.uid ?? 'unknown');
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : String(err));
+    }
   };
 
   return (
@@ -60,16 +60,39 @@ export default function AnnouncementListScreen({ navigation }: Props) {
           <View key={item.id}>
             <AnnouncementCard title={item.title} body={item.body} createdAt={item.createdAt} />
             <View style={styles.itemActions}>
-              <Pressable onPress={() => navigation.navigate('AnnouncementForm', { announcementId: item.id })}>
+              <Pressable
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={() => navigation.navigate('AnnouncementForm', { announcementId: item.id })}
+              >
                 <Text style={styles.actionText}>Edit</Text>
               </Pressable>
-              <Pressable onPress={() => handleDelete(item.id, item.title)}>
+              <Pressable
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={() => setPendingDelete({ id: item.id, title: item.title })}
+              >
                 <Text style={styles.actionTextDestructive}>Delete</Text>
               </Pressable>
             </View>
           </View>
         ))}
       </ScrollView>
+
+      <Dialog
+        visible={pendingDelete !== null}
+        title="Delete announcement?"
+        message={pendingDelete ? `"${pendingDelete.title}" will be removed from the feed.` : ''}
+        buttons={[
+          { label: 'Cancel', onPress: () => setPendingDelete(null), variant: 'secondary' },
+          { label: 'Delete', onPress: confirmDelete, variant: 'primary' },
+        ]}
+      />
+
+      <Dialog
+        visible={errorMessage !== null}
+        title="Couldn't delete"
+        message={errorMessage ?? ''}
+        buttons={[{ label: 'OK', onPress: () => setErrorMessage(null), variant: 'primary' }]}
+      />
     </ScreenContainer>
   );
 }

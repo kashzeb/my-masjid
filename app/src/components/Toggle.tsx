@@ -14,6 +14,7 @@ export default function Toggle({ value, onValueChange, disabled }: ToggleProps) 
   return (
     <Pressable
       onPress={() => !disabled && onValueChange(!value)}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       style={[styles.track, value && styles.trackOn, disabled && styles.trackDisabled]}
     >
       <View style={[styles.thumb, value && styles.thumbOn]} />

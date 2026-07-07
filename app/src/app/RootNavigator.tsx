@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Image } from 'react-native';
 import { NavigationContainer, type NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -53,37 +55,71 @@ export type PublicTabParamList = {
 
 const Tab = createBottomTabNavigator<PublicTabParamList>();
 
+const TAB_ICONS = {
+  Home: require('../../assets/tab-home.png'),
+  Announcements: require('../../assets/tab-announcements.png'),
+  Settings: require('../../assets/tab-settings.png'),
+};
+
+function PublicTabs() {
+  // Bumping the key on `blur` needed a second tab press to actually take
+  // effect - the remount was scheduled but not committed in time for the
+  // very next render. Bumping it synchronously in `tabPress`, checked
+  // against whether Settings is ALREADY focused, fixes the timing: the
+  // fresh key is set as part of the same interaction that navigates back
+  // in, not a step behind it.
+  const [settingsResetKey, setSettingsResetKey] = useState(0);
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.accent,
+        tabBarInactiveTintColor: theme.colors.textMuted,
+        tabBarShowLabel: true,
+        tabBarStyle: {
+          height: 64,
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 0.5,
+          borderTopColor: theme.colors.border,
+          elevation: 8,
+          shadowColor: '#2E2A50',
+          shadowOpacity: 0.06,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: -3 },
+        },
+        tabBarItemStyle: { paddingVertical: 6 },
+        tabBarIcon: ({ color, size }) => (
+          <Image
+            source={TAB_ICONS[route.name]}
+            style={{ width: size * 0.8, height: size * 0.8, tintColor: color }}
+            resizeMode="contain"
+          />
+        ),
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Announcements" component={AnnouncementsScreen} />
+      <Tab.Screen
+        name="Settings"
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            if (!navigation.isFocused()) {
+              setSettingsResetKey((k) => k + 1);
+            }
+          },
+        })}
+      >
+        {() => <SettingsStackNavigator key={settingsResetKey} />}
+      </Tab.Screen>
+    </Tab.Navigator>
+  );
+}
+
 export default function RootNavigator() {
   return (
     <NavigationContainer ref={navigationRef}>
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: theme.colors.accent,
-          tabBarInactiveTintColor: theme.colors.textMuted,
-          tabBarShowLabel: true,
-          tabBarStyle: {
-            height: 64,
-            backgroundColor: theme.colors.surface,
-            borderTopWidth: 0.5,
-            borderTopColor: theme.colors.border,
-            elevation: 8,
-            shadowColor: '#2E2A50',
-            shadowOpacity: 0.06,
-            shadowRadius: 6,
-            shadowOffset: { width: 0, height: -3 },
-          },
-          tabBarItemStyle: { paddingVertical: 6 },
-        }}
-      >
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Announcements" component={AnnouncementsScreen} />
-        <Tab.Screen
-          name="Settings"
-          component={SettingsStackNavigator}
-          options={{ unmountOnBlur: true }}
-        />
-      </Tab.Navigator>
+      <PublicTabs />
     </NavigationContainer>
   );
 }
