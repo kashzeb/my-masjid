@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_PRAYER_PREFS, type PrayerNotificationPrefs } from '@/services/notificationService';
+import { syncAnnouncementsSubscription } from '@/services/pushTokenService';
 import type { PrayerName } from '@/constants/masjid';
 
 const CACHE_KEY = 'my-masjid:notification-prefs-v1';
@@ -12,10 +13,8 @@ interface StoredPrefs {
 
 interface PreferencesState {
   prayerPrefs: PrayerNotificationPrefs;
-  // Stored now for forward-compatibility with M7 — has NO functional effect
-  // yet, since there's no FCM topic subscription to actually turn on/off
-  // until the Cloud Function piece exists. Toggling this today just saves
-  // a preference nobody reads yet.
+  // Mirrored to this device's pushTokens doc in Firestore (M7) - the Cloud
+  // Function only sends announcement pushes to tokens with this set to true.
   announcementsEnabled: boolean;
   hydrated: boolean;
   setPrayerPref: (prayer: PrayerName, enabled: boolean) => Promise<void>;
@@ -68,6 +67,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => {
     setAnnouncementsEnabled: async (enabled) => {
       set({ announcementsEnabled: enabled });
       await persist(get().prayerPrefs, enabled);
+      await syncAnnouncementsSubscription(enabled);
     },
   };
 });

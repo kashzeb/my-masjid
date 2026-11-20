@@ -8,7 +8,21 @@ import RootNavigator from './RootNavigator';
 import ToastHost from '@/components/ToastHost';
 import SplashOverlay from '@/components/SplashOverlay';
 import { requestNotificationPermission } from '@/services/notificationService';
+import { syncAnnouncementsSubscription } from '@/services/pushTokenService';
+import { usePreferencesStore } from '@/store/preferencesStore';
 import { navigateFromNotificationData } from '@/utils/notificationNavigation';
+
+function getAnnouncementsPreference(): Promise<boolean> {
+  const state = usePreferencesStore.getState();
+  if (state.hydrated) return Promise.resolve(state.announcementsEnabled);
+  return new Promise((resolve) => {
+    const unsubscribe = usePreferencesStore.subscribe((s) => {
+      if (!s.hydrated) return;
+      unsubscribe();
+      resolve(s.announcementsEnabled);
+    });
+  });
+}
 
 // Keeps the native splash visible until we explicitly hide it below -
 // called at module load, before the component even renders.
@@ -21,7 +35,13 @@ function App() {
 
   useEffect(() => {
     // Requested on launch per PRD - the standard OS permission prompt.
-    requestNotificationPermission();
+    // Once granted, register this device for announcement pushes (M7) using
+    // the saved Announcements preference (waiting for it to load first).
+    requestNotificationPermission().then(async (granted) => {
+      if (!granted) return;
+      const enabled = await getAnnouncementsPreference();
+      await syncAnnouncementsSubscription(enabled);
+    });
 
     // Routes a tapped notification to the right tab (Navigation Flow §4).
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {

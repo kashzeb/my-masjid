@@ -50,6 +50,11 @@ export default function SettingsScreen({ navigation }: Props) {
     }
   };
 
+  const handleAnnouncementsToggle = async (enabled: boolean) => {
+    await setAnnouncementsEnabled(enabled);
+    showToast(`Announcement notifications ${enabled ? 'enabled' : 'disabled'}`, enabled ? 'success' : 'default');
+  };
+
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.content}>
@@ -88,14 +93,10 @@ export default function SettingsScreen({ navigation }: Props) {
 
           <Pressable
             style={[styles.row, styles.rowLast]}
-            onPress={() => setAnnouncementsEnabled(!announcementsEnabled)}
-            disabled
+            onPress={() => handleAnnouncementsToggle(!announcementsEnabled)}
           >
-            <View>
-              <Text style={styles.rowLabel}>Announcements</Text>
-              <Text style={styles.rowNote}>Push notifications for this arrive in a later update</Text>
-            </View>
-            <Toggle value={announcementsEnabled} onValueChange={setAnnouncementsEnabled} disabled />
+            <Text style={styles.rowLabel}>Announcements</Text>
+            <Toggle value={announcementsEnabled} onValueChange={handleAnnouncementsToggle} />
           </Pressable>
         </Card>
       </ScrollView>

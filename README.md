@@ -47,3 +47,21 @@ enable Firestore + Auth, register a Web app for config keys, deploy
 `firestore.rules`/`firestore.indexes.json`, and manually seed
 `masjids/noor-masjid` + `masjids/noor-masjid/timetable/current` in the
 Firestore Console.
+
+## Announcement push notifications (M7)
+
+Uses **Expo Push**. Each device saves an anonymous token to
+`masjids/{masjidId}/pushTokens/{token}`, and the `onAnnouncementCreated`
+Cloud Function sends the push to every token with `announcements: true`.
+
+One-time setup per Firebase project:
+
+1. Switch the Firebase project to the **Blaze** plan and set a budget alert.
+2. Check the Firestore location and make `REGION` in
+   `functions/src/onAnnouncementCreated.ts` match it.
+3. Deploy the rules and the function: `firebase deploy --only firestore:rules,functions`
+4. Android: register an Android app (package `org.noormasjid.mymasjid`) in
+   Firebase, download `google-services.json` into `app/` (git-ignored), and
+   upload an FCM V1 service-account key to EAS (`eas credentials`).
+5. Make a development build (`eas build --profile development --platform android`).
+   Remote push does not work in Expo Go.

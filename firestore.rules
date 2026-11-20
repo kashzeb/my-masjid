@@ -23,6 +23,21 @@ service cloud.firestore {
         allow delete: if false; // hard delete never allowed — soft delete via update only
       }
 
+      // Anonymous Expo push tokens for announcement notifications (M7).
+      // Devices may only write their own token doc (doc ID == token) with
+      // exactly these fields. Nobody can read or delete them client-side -
+      // only the Cloud Function (Admin SDK) reads them and prunes dead ones.
+      match /pushTokens/{tokenId} {
+        allow read, delete: if false;
+        allow create, update: if
+          request.resource.data.keys().hasOnly(['token', 'platform', 'announcements', 'updatedAt']) &&
+          request.resource.data.token == tokenId &&
+          tokenId.matches('^Expo(nent)?PushToken\\[[^\\]]{1,200}\\]$') &&
+          request.resource.data.announcements is bool &&
+          request.resource.data.platform in ['ios', 'android'] &&
+          request.resource.data.updatedAt == request.time;
+      }
+
       match /admins/{adminUid} {
         allow read: if false;  // no client, including the admin themself, needs to read this
         allow write: if false; // provisioned only via Firebase Console / Admin SDK

@@ -31,13 +31,6 @@ try {
 }
 export { auth };
 
-
-
-// NOTE: firebase/messaging is deliberately NOT wired up here. It's a
-// web-browser-only API (relies on `window` + Service Workers) and crashes
-// immediately in React Native. M7's FCM topic subscription (Architecture
-// §4.4) will need a React-Native-appropriate approach instead — most likely
-// registering a native push token via expo-notifications and having the
-// Cloud Function manage topic membership server-side, rather than calling
-// a client-side `getMessaging()`. We'll design that properly when we
-// actually reach M7, not guess at it now.
+// NOTE: firebase/messaging is deliberately NOT used - it's browser-only and
+// crashes in React Native. Announcement push (M7) goes through Expo Push
+// tokens instead; see services/pushTokenService.ts.

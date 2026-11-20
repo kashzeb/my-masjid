@@ -15,6 +15,11 @@ const config: ExpoConfig = {
   android: {
     package: 'org.noormasjid.mymasjid',
     adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#03532D' },
+    // Required for remote push (announcements) on Android. Download it from
+    // Firebase Console → Project settings → Your apps → Android app. It's
+    // git-ignored: locally it sits next to this file; on EAS it's supplied as
+    // a file-type environment variable named GOOGLE_SERVICES_JSON.
+    googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
   },
   plugins: ['expo-notifications', 'expo-font', 'expo-image', 'expo-splash-screen', 'expo-status-bar', '@react-native-community/datetimepicker'],
   extra: {
