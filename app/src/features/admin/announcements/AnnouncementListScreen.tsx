@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/authStore';
 import { softDeleteAnnouncement } from '@/services/announcementsService';
 import { showToast } from '@/store/toastStore';
 import { successHaptic } from '@/utils/haptics';
+import { friendlyError } from '@/utils/errors';
 import ScreenContainer from '@/components/ScreenContainer';
 import EmptyState from '@/components/EmptyState';
 import AnnouncementCard from '@/components/AnnouncementCard';
@@ -40,7 +41,7 @@ export default function AnnouncementListScreen({ navigation }: Props) {
       successHaptic();
       showToast('Announcement deleted', 'default');
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : String(err));
+      setErrorMessage(friendlyError(err));
     }
   };
 

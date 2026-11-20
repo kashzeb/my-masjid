@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import Text from '@/components/Text';
+import { friendlyError } from '@/utils/errors';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { theme } from '@/constants/theme';
@@ -49,13 +50,7 @@ export default function AnnouncementFormScreen({ route, navigation }: Props) {
       }
       navigation.goBack();
     } catch (err) {
-      const message =
-        err instanceof Error && /network/i.test(err.message)
-          ? "Couldn't reach the server — check your internet connection and try again."
-          : err instanceof Error
-            ? err.message
-            : String(err);
-      setErrorMessage(message);
+      setErrorMessage(friendlyError(err));
     } finally {
       setSubmitting(false);
     }
