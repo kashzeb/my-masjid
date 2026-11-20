@@ -25,9 +25,10 @@ const config: ExpoConfig = {
   extra: {
     appEnv: APP_ENV,
     eas: {
-      projectId: '66c490d2-9ba1-4a3e-9668-160302757d2b',
+      projectId: '17508c90-f3d7-4127-8092-5ff2d6d87ceb',
     },
   },
+  owner: 'kashif.khan19195',
 };
 
 export default config;
