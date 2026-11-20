@@ -26,9 +26,10 @@ export const PRAYER_ICONS: Record<PrayerName, IconName> = {
   isha: 'weather-night',
 };
 
-// Days to add to the calculated Hijri date so it matches the Masjid's
-// moon-sighted date. India usually begins each month a day after the
-// arithmetic calendar (e.g. Ramadan 1446 began 2 Mar 2025, not 1 Mar).
+// Days to add to the Umm al-Qura (Saudi) Hijri date so it matches the
+// Masjid's moon-sighted date. India usually starts each month one day after
+// Saudi Arabia (Ramadan 1446: 1 Mar 2025 in Saudi, 2 Mar in India), hence -1.
+// If the Masjid announces a different date, change this number.
 export const HIJRI_ADJUST_DAYS = -1;
 
 export const ANNOUNCEMENTS_TOPIC = 'announcements';

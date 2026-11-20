@@ -153,16 +153,8 @@ const HIJRI_MONTHS = [
   'Dhul Hijjah',
 ];
 
-/**
- * Hijri date using the standard arithmetic (tabular / "Kuwaiti") calendar.
- * Works offline and on every device, but can differ by a day from the
- * locally moon-sighted date - `adjustDays` lets the Masjid correct that.
- */
-export function getHijriDate(date: dayjs.Dayjs, adjustDays = 0): { day: number; month: string; year: number } {
-  const d = date.add(adjustDays, 'day');
-  const y = d.year();
-  const m = d.month() + 1;
-  const day = d.date();
+/** Arithmetic (tabular) Hijri calendar - used only if the device lacks Umm al-Qura support. */
+function tabularHijri(y: number, m: number, day: number): { day: number; month: number; year: number } {
   const t = Math.trunc;
   const a = t((m - 14) / 12);
   const jd =
@@ -173,7 +165,40 @@ export function getHijriDate(date: dayjs.Dayjs, adjustDays = 0): { day: number; 
   const j = t((10985 - l) / 5316) * t((50 * l) / 17719) + t(l / 5670) * t((43 * l) / 15238);
   l = l - t((30 - j) / 15) * t((17719 * j) / 50) - t(j / 16) * t((15238 * j) / 43) + 29;
   const month = t((24 * l) / 709);
-  const hDay = l - t((709 * month) / 24);
-  const year = 30 * n + j - 30;
-  return { day: hDay, month: HIJRI_MONTHS[month - 1], year };
+  return { day: l - t((709 * month) / 24), month, year: 30 * n + j - 30 };
+}
+
+/** Umm al-Qura (official Saudi) calendar via the device's Intl support, or null if unavailable. */
+function ummAlQuraHijri(y: number, m: number, day: number): { day: number; month: number; year: number } | null {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+    if (formatter.resolvedOptions().calendar !== 'islamic-umalqura') return null;
+    const parts = formatter.formatToParts(new Date(Date.UTC(y, m - 1, day, 12)));
+    const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? '', 10);
+    const result = { day: get('day'), month: get('month'), year: get('year') };
+    const valid = result.day >= 1 && result.day <= 30 && result.month >= 1 && result.month <= 12 && result.year > 1400;
+    return valid ? result : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Hijri date for the Home header: the Umm al-Qura calendar, shifted by
+ * `adjustDays` to match the locally moon-sighted date (India is usually one
+ * day behind Saudi Arabia). Falls back to the arithmetic calendar on devices
+ * without Umm al-Qura support.
+ */
+export function getHijriDate(date: dayjs.Dayjs, adjustDays = 0): { day: number; month: string; year: number } {
+  const d = date.add(adjustDays, 'day');
+  const y = d.year();
+  const m = d.month() + 1;
+  const day = d.date();
+  const hijri = ummAlQuraHijri(y, m, day) ?? tabularHijri(y, m, day);
+  return { day: hijri.day, month: HIJRI_MONTHS[hijri.month - 1], year: hijri.year };
 }
