@@ -22,6 +22,12 @@ export async function requestNotificationPermission(): Promise<boolean> {
   return status === 'granted';
 }
 
+/** Used by the Settings screen to show a banner if notifications are off. */
+export async function getNotificationPermissionGranted(): Promise<boolean> {
+  const { status } = await Notifications.getPermissionsAsync();
+  return status === 'granted';
+}
+
 export type PrayerNotificationPrefs = Record<PrayerName, boolean>;
 
 export const DEFAULT_PRAYER_PREFS: PrayerNotificationPrefs = {

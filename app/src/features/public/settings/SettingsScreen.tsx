@@ -1,11 +1,13 @@
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, Linking, StyleSheet } from 'react-native';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '@/constants/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '@/app/RootNavigator';
 import { useAuthStore } from '@/store/authStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import { useTimetableStore } from '@/store/timetableStore';
-import { scheduleUpcomingPrayerNotifications } from '@/services/notificationService';
+import { scheduleUpcomingPrayerNotifications, getNotificationPermissionGranted } from '@/services/notificationService';
 import { showToast } from '@/store/toastStore';
 import { PRAYERS, PRAYER_LABELS, type PrayerName } from '@/constants/masjid';
 import ScreenContainer from '@/components/ScreenContainer';
@@ -18,6 +20,16 @@ export default function SettingsScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const { prayerPrefs, announcementsEnabled, setPrayerPref, setAnnouncementsEnabled } = usePreferencesStore();
   const { timetable, masjid } = useTimetableStore();
+  const [notificationsBlocked, setNotificationsBlocked] = useState(false);
+
+  // Re-checked every time Settings regains focus (not just on first mount) -
+  // catches the common real flow of "went to system settings, enabled it,
+  // came back" without needing an app restart to reflect the change.
+  useFocusEffect(
+    useCallback(() => {
+      getNotificationPermissionGranted().then((granted) => setNotificationsBlocked(!granted));
+    }, [])
+  );
 
   const handleAdminPress = () => {
     // Login and Dashboard are now siblings of Settings in the same nested
@@ -51,20 +63,40 @@ export default function SettingsScreen({ navigation }: Props) {
         <Card style={styles.card}>
           <Text style={styles.sectionLabel}>Notifications</Text>
 
+          {notificationsBlocked && (
+            <View style={styles.blockedBanner}>
+              <Text style={styles.blockedText}>
+                Notifications are turned off for this app in your phone's settings, so none of the toggles below will
+                actually alert you.
+              </Text>
+              <Pressable onPress={() => Linking.openSettings()} style={styles.blockedButton}>
+                <Text style={styles.blockedButtonText}>Open Settings</Text>
+              </Pressable>
+            </View>
+          )}
+
           {PRAYERS.map((prayer) => (
-            <View key={prayer} style={styles.row}>
+            <Pressable
+              key={prayer}
+              style={styles.row}
+              onPress={() => handlePrayerToggle(prayer, !prayerPrefs[prayer])}
+            >
               <Text style={styles.rowLabel}>{PRAYER_LABELS[prayer]}</Text>
               <Toggle value={prayerPrefs[prayer]} onValueChange={(v) => handlePrayerToggle(prayer, v)} />
-            </View>
+            </Pressable>
           ))}
 
-          <View style={[styles.row, styles.rowLast]}>
+          <Pressable
+            style={[styles.row, styles.rowLast]}
+            onPress={() => setAnnouncementsEnabled(!announcementsEnabled)}
+            disabled
+          >
             <View>
               <Text style={styles.rowLabel}>Announcements</Text>
               <Text style={styles.rowNote}>Push notifications for this arrive in a later update</Text>
             </View>
             <Toggle value={announcementsEnabled} onValueChange={setAnnouncementsEnabled} disabled />
-          </View>
+          </Pressable>
         </Card>
       </ScrollView>
     </ScreenContainer>
@@ -91,6 +123,21 @@ const styles = StyleSheet.create({
   },
   adminButtonText: { fontSize: theme.typography.caption, fontWeight: '600', color: theme.colors.textOnAccent },
   card: { padding: theme.spacing.md },
+  blockedBanner: {
+    backgroundColor: theme.colors.dangerSubtle,
+    borderRadius: theme.radius.control,
+    padding: theme.spacing.sm3,
+    marginBottom: theme.spacing.sm,
+  },
+  blockedText: { fontSize: theme.typography.label, color: theme.colors.danger, marginBottom: theme.spacing.sm },
+  blockedButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: theme.colors.danger,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  blockedButtonText: { fontSize: theme.typography.caption, fontWeight: '600', color: '#FFFFFF' },
   sectionLabel: {
     fontSize: theme.typography.caption,
     fontWeight: '600',

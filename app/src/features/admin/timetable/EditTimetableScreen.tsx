@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, Alert, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { ScrollView, Text, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { theme } from '@/constants/theme';
@@ -23,6 +23,7 @@ export default function EditTimetableScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const [submitting, setSubmitting] = useState(false);
   const [showSavedDialog, setShowSavedDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { control, handleSubmit, reset } = useForm<TimetableFormValues>({
     resolver: zodResolver(timetableFormSchema),
@@ -44,7 +45,16 @@ export default function EditTimetableScreen({ navigation }: Props) {
       await fetch();
       setShowSavedDialog(true);
     } catch (err) {
-      Alert.alert('Could not save', err instanceof Error ? err.message : String(err));
+      // A friendlier, non-technical message for the common case (offline);
+      // otherwise fall back to whatever the actual error says, rather than
+      // hiding real diagnostic information.
+      const message =
+        err instanceof Error && /network/i.test(err.message)
+          ? "Couldn't reach the server — check your internet connection and try again."
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      setErrorMessage(message);
     } finally {
       setSubmitting(false);
     }
@@ -94,6 +104,13 @@ export default function EditTimetableScreen({ navigation }: Props) {
           { label: 'Stay here', onPress: () => setShowSavedDialog(false), variant: 'secondary' },
           { label: 'Go to Home', onPress: goToHome, variant: 'primary' },
         ]}
+      />
+
+      <Dialog
+        visible={errorMessage !== null}
+        title="Couldn't save"
+        message={errorMessage ?? ''}
+        buttons={[{ label: 'OK', onPress: () => setErrorMessage(null), variant: 'primary' }]}
       />
     </ScreenContainer>
   );

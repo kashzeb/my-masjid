@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, Text, Alert, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { ScrollView, Text, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { theme } from '@/constants/theme';
@@ -10,6 +10,7 @@ import { announcementFormSchema, type AnnouncementFormValues } from './announcem
 import TextField from '@/components/TextField';
 import PrimaryButton from '@/components/PrimaryButton';
 import ScreenContainer from '@/components/ScreenContainer';
+import Dialog from '@/components/Dialog';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '@/app/RootNavigator';
 
@@ -21,6 +22,7 @@ export default function AnnouncementFormScreen({ route, navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const { announcements } = useAnnouncementsStore();
   const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Reuses the same store the admin list already subscribed to - the item
   // is already in memory by the time this screen is reached, no separate
@@ -46,7 +48,13 @@ export default function AnnouncementFormScreen({ route, navigation }: Props) {
       }
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Could not save', err instanceof Error ? err.message : String(err));
+      const message =
+        err instanceof Error && /network/i.test(err.message)
+          ? "Couldn't reach the server — check your internet connection and try again."
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      setErrorMessage(message);
     } finally {
       setSubmitting(false);
     }
@@ -93,6 +101,13 @@ export default function AnnouncementFormScreen({ route, navigation }: Props) {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Dialog
+        visible={errorMessage !== null}
+        title="Couldn't save"
+        message={errorMessage ?? ''}
+        buttons={[{ label: 'OK', onPress: () => setErrorMessage(null), variant: 'primary' }]}
+      />
     </ScreenContainer>
   );
 }

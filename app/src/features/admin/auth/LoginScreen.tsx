@@ -44,8 +44,13 @@ export default function LoginScreen({ navigation }: Props) {
       // Replaces, not pushes - so back-from-Dashboard skips Login and
       // lands on Settings (Navigation Flow §3.2).
       navigation.replace('Dashboard');
-    } catch {
-      setFormError('Incorrect email or password.');
+    } catch (err) {
+      const code = err instanceof Error && 'code' in err ? String((err as { code: unknown }).code) : '';
+      setFormError(
+        code.includes('network')
+          ? "Couldn't reach the server — check your internet connection and try again."
+          : 'Incorrect email or password.'
+      );
     } finally {
       setSubmitting(false);
     }
