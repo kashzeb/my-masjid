@@ -110,3 +110,70 @@ export function getTodayPrayerTimes(timetable: Timetable): Array<{ prayer: Praye
     jamaat: timetable[prayer].jamaat,
   }));
 }
+
+/**
+ * The events either side of "now" - used for the countdown ring's progress
+ * (how far through the gap between the last event and the next one).
+ */
+export function getEventWindow(timetable: Timetable, timezoneName: string, now = masjidNow(timezoneName)) {
+  const events = [-1, 0, 1].flatMap((offset) => buildDayEvents(timetable, timezoneName, offset));
+  const nextIndex = events.findIndex((event) => event.at.isAfter(now));
+  const next = events[nextIndex];
+  const previous = events[nextIndex - 1];
+  const span = next.at.diff(previous.at, 'second');
+  const progress = span > 0 ? Math.min(1, Math.max(0, now.diff(previous.at, 'second') / span)) : 0;
+  return { previous, next, progress };
+}
+
+/** True once today's Jamaat for this prayer has started. */
+export function isPrayerDoneToday(timetable: Timetable, prayer: PrayerName, timezoneName: string, now = masjidNow(timezoneName)): boolean {
+  return !getInstantForTime(timetable[prayer].jamaat, timezoneName, 0).isAfter(now);
+}
+
+/** "17:05" -> { time: "5:05", period: "PM" } for the prayer list. */
+export function splitTime12h(timeStr: string): { time: string; period: 'AM' | 'PM' } {
+  const [hour, minute] = timeStr.split(':').map(Number);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return { time: `${hour12}:${String(minute).padStart(2, '0')}`, period };
+}
+
+const HIJRI_MONTHS = [
+  'Muharram',
+  'Safar',
+  'Rabi I',
+  'Rabi II',
+  'Jumada I',
+  'Jumada II',
+  'Rajab',
+  "Sha'ban",
+  'Ramadan',
+  'Shawwal',
+  "Dhul Qa'dah",
+  'Dhul Hijjah',
+];
+
+/**
+ * Hijri date using the standard arithmetic (tabular / "Kuwaiti") calendar.
+ * Works offline and on every device, but can differ by a day from the
+ * locally moon-sighted date - `adjustDays` lets the Masjid correct that.
+ */
+export function getHijriDate(date: dayjs.Dayjs, adjustDays = 0): { day: number; month: string; year: number } {
+  const d = date.add(adjustDays, 'day');
+  const y = d.year();
+  const m = d.month() + 1;
+  const day = d.date();
+  const t = Math.trunc;
+  const a = t((m - 14) / 12);
+  const jd =
+    t((1461 * (y + 4800 + a)) / 4) + t((367 * (m - 2 - 12 * a)) / 12) - t((3 * t((y + 4900 + a) / 100)) / 4) + day - 32075;
+  let l = jd - 1948440 + 10632;
+  const n = t((l - 1) / 10631);
+  l = l - 10631 * n + 354;
+  const j = t((10985 - l) / 5316) * t((50 * l) / 17719) + t(l / 5670) * t((43 * l) / 15238);
+  l = l - t((30 - j) / 15) * t((17719 * j) / 50) - t(j / 16) * t((15238 * j) / 43) + 29;
+  const month = t((24 * l) / 709);
+  const hDay = l - t((709 * month) / 24);
+  const year = 30 * n + j - 30;
+  return { day: hDay, month: HIJRI_MONTHS[month - 1], year };
+}

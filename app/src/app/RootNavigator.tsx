@@ -1,9 +1,13 @@
 import { useState } from 'react';
-import { Image } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer, type NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { theme } from '@/constants/theme';
+import Icon, { type IconName } from '@/components/Icon';
+import { fontFor } from '@/components/Text';
+import { tapHaptic } from '@/utils/haptics';
 import { navigationRef } from './navigationRef';
 
 import HomeScreen from '@/features/public/home/HomeScreen';
@@ -34,7 +38,16 @@ const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 
 function SettingsStackNavigator() {
   return (
-    <SettingsStack.Navigator screenOptions={{ headerTitleStyle: { fontWeight: '500' } }}>
+    <SettingsStack.Navigator
+      screenOptions={{
+        animation: 'slide_from_right',
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: theme.colors.surfacePage },
+        headerTintColor: theme.colors.textPrimary,
+        headerTitleStyle: { fontFamily: fontFor('700'), fontSize: 17 },
+        contentStyle: { backgroundColor: theme.colors.surfacePage },
+      }}
+    >
       <SettingsStack.Screen name="SettingsHome" component={SettingsScreen} options={{ headerShown: false }} />
       <SettingsStack.Screen name="Login" component={LoginScreen} options={{ title: 'Admin login' }} />
       <SettingsStack.Screen name="Dashboard" component={DashboardScreen} />
@@ -55,11 +68,25 @@ export type PublicTabParamList = {
 
 const Tab = createBottomTabNavigator<PublicTabParamList>();
 
-const TAB_ICONS = {
-  Home: require('../../assets/tab-home.png'),
-  Announcements: require('../../assets/tab-announcements.png'),
-  Settings: require('../../assets/tab-settings.png'),
+const TAB_ICONS: Record<keyof PublicTabParamList, { active: IconName; inactive: IconName }> = {
+  Home: { active: 'home-variant', inactive: 'home-variant-outline' },
+  Announcements: { active: 'bullhorn', inactive: 'bullhorn-outline' },
+  Settings: { active: 'cog', inactive: 'cog-outline' },
 };
+
+// Active tab gets a soft green pill behind its icon.
+function TabIcon({ name, focused, color }: { name: keyof PublicTabParamList; focused: boolean; color: string }) {
+  return (
+    <View style={[tabStyles.pill, focused && tabStyles.pillActive]}>
+      <Icon name={focused ? TAB_ICONS[name].active : TAB_ICONS[name].inactive} size={22} color={color} />
+    </View>
+  );
+}
+
+const tabStyles = StyleSheet.create({
+  pill: { width: 56, height: 30, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  pillActive: { backgroundColor: theme.colors.prayerSubtle },
+});
 
 function PublicTabs() {
   // Bumping the key on `blur` needed a second tab press to actually take
@@ -69,37 +96,31 @@ function PublicTabs() {
   // fresh key is set as part of the same interaction that navigates back
   // in, not a step behind it.
   const [settingsResetKey, setSettingsResetKey] = useState(0);
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
+      screenListeners={{ tabPress: () => tapHaptic() }}
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.accent,
-        tabBarInactiveTintColor: theme.colors.textMuted,
-        tabBarShowLabel: true,
+        animation: 'fade',
+        tabBarActiveTintColor: theme.colors.prayerSubtleText,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
+        tabBarLabelStyle: { fontFamily: fontFor('700'), fontSize: 11, marginTop: 2 },
         tabBarStyle: {
-          height: 64,
+          height: 66 + insets.bottom,
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 8,
           backgroundColor: theme.colors.surface,
-          borderTopWidth: 0.5,
+          borderTopWidth: 1,
           borderTopColor: theme.colors.border,
-          elevation: 8,
-          shadowColor: '#2E2A50',
-          shadowOpacity: 0.06,
-          shadowRadius: 6,
-          shadowOffset: { width: 0, height: -3 },
+          elevation: 0,
         },
-        tabBarItemStyle: { paddingVertical: 6 },
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={TAB_ICONS[route.name]}
-            style={{ width: size * 0.8, height: size * 0.8, tintColor: color }}
-            resizeMode="contain"
-          />
-        ),
+        tabBarIcon: ({ color, focused }) => <TabIcon name={route.name} focused={focused} color={color} />,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Announcements" component={AnnouncementsScreen} />
+      <Tab.Screen name="Announcements" component={AnnouncementsScreen} options={{ tabBarLabel: 'Updates' }} />
       <Tab.Screen
         name="Settings"
         listeners={({ navigation }) => ({

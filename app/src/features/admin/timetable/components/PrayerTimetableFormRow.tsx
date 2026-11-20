@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '@/components/Text';
+import Icon from '@/components/Icon';
 import { Controller, type Control } from 'react-hook-form';
 import { theme } from '@/constants/theme';
 import TimeField from '@/components/TimeField';
 import type { TimetableFormValues } from '../timetableFormSchema';
-import type { PrayerName } from '@/constants/masjid';
+import { PRAYER_ICONS, type PrayerName } from '@/constants/masjid';
 
 interface PrayerTimetableFormRowProps {
   prayer: PrayerName;
@@ -14,7 +16,12 @@ interface PrayerTimetableFormRowProps {
 export default function PrayerTimetableFormRow({ prayer, label, control }: PrayerTimetableFormRowProps) {
   return (
     <View style={styles.card}>
-      <Text style={styles.prayerLabel}>{label}</Text>
+      <View style={styles.titleRow}>
+        <View style={styles.iconTile}>
+          <Icon name={PRAYER_ICONS[prayer]} size={18} color={theme.colors.prayer} />
+        </View>
+        <Text style={styles.prayerLabel}>{label}</Text>
+      </View>
       <View style={styles.row}>
         <Controller
           control={control}
@@ -38,12 +45,24 @@ export default function PrayerTimetableFormRow({ prayer, label, control }: Praye
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.surfaceMuted,
-    borderRadius: theme.radius.control,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm3,
   },
-  prayerLabel: { fontSize: theme.typography.body, fontWeight: '600', color: theme.colors.textPrimary, marginBottom: theme.spacing.sm },
+  titleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.sm3 },
+  iconTile: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: theme.colors.prayerSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  prayerLabel: { fontSize: theme.typography.bodyLg, fontWeight: '700', color: theme.colors.textPrimary },
   row: { flexDirection: 'row' },
   spacer: { width: theme.spacing.sm },
 });

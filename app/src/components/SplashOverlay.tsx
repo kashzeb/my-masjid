@@ -1,4 +1,6 @@
-import { View, Text, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { View, Image, ActivityIndicator, StyleSheet, Animated } from 'react-native';
+import Text from '@/components/Text';
 import { theme } from '@/constants/theme';
 
 /**
@@ -8,16 +10,33 @@ import { theme } from '@/constants/theme';
  * rather than pulled from Firestore, deliberately - see App.tsx's comment
  * on why this never waits on a network fetch.
  */
-export default function SplashOverlay() {
+interface SplashOverlayProps {
+  /** How long the intro stays fully visible before fading out. */
+  holdMs: number;
+  onFinish: () => void;
+}
+
+export default function SplashOverlay({ holdMs, onFinish }: SplashOverlayProps) {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const animation = Animated.sequence([
+      Animated.delay(holdMs),
+      Animated.timing(opacity, { toValue: 0, duration: 450, useNativeDriver: true }),
+    ]);
+    animation.start(({ finished }) => finished && onFinish());
+    return () => animation.stop();
+  }, [holdMs, onFinish, opacity]);
+
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity }]} pointerEvents="none">
       <Image source={require('../../assets/splash-bg.png')} style={styles.background} resizeMode="cover" />
       <View style={styles.content}>
         <Text style={styles.name}>Noor Masjid</Text>
         <Text style={styles.tagline}>My Masjid</Text>
         <ActivityIndicator color="#FFFFFF" style={styles.loader} />
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

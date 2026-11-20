@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Modal, StyleSheet, Platform } from 'react-native';
+import { View, Pressable, Modal, StyleSheet, Platform } from 'react-native';
+import Text from '@/components/Text';
+import Icon from '@/components/Icon';
+import { splitTime12h } from '@/utils/dateTime';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { theme } from '@/constants/theme';
 
@@ -60,7 +63,10 @@ export default function TimeField({ label, value, onChangeText, error }: TimeFie
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <Pressable style={styles.input} onPress={openPicker}>
-        <Text style={styles.valueText}>{value || 'HH:mm'}</Text>
+        <Icon name="clock-time-four-outline" size={17} color={theme.colors.textTertiary} />
+        <Text style={[styles.valueText, !value && styles.placeholder]}>
+          {value ? `${splitTime12h(value).time} ${splitTime12h(value).period}` : 'Set time'}
+        </Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
 
@@ -98,16 +104,20 @@ export default function TimeField({ label, value, onChangeText, error }: TimeFie
 
 const styles = StyleSheet.create({
   field: { flex: 1 },
-  label: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, marginBottom: 4 },
+  label: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, marginBottom: 6, fontWeight: '600' },
   input: {
-    borderWidth: 0.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1.5,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.control,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     backgroundColor: theme.colors.surface,
   },
-  valueText: { fontSize: theme.typography.body, color: theme.colors.textPrimary },
+  valueText: { fontSize: theme.typography.bodyLg, fontWeight: '700', color: theme.colors.textPrimary, fontVariant: ['tabular-nums'] },
+  placeholder: { color: theme.colors.textTertiary, fontWeight: '500' },
   error: { color: theme.colors.danger, fontSize: 11, marginTop: 4 },
   modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' },
   modalSheet: { backgroundColor: theme.colors.surface, borderTopLeftRadius: theme.radius.card, borderTopRightRadius: theme.radius.card },

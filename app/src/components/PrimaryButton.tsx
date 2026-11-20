@@ -1,4 +1,7 @@
-import { Pressable, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { StyleSheet, ActivityIndicator, View } from 'react-native';
+import Text from '@/components/Text';
+import Icon, { type IconName } from '@/components/Icon';
+import PressableScale from '@/components/PressableScale';
 import { theme } from '@/constants/theme';
 
 interface PrimaryButtonProps {
@@ -6,16 +9,27 @@ interface PrimaryButtonProps {
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
+  icon?: IconName;
 }
 
-// Updated to match the design system's Button (primary variant): fully
-// pill-shaped, near-black background - the primary interactive accent,
-// deliberately distinct from the masjid green reserved for prayer moments.
-export default function PrimaryButton({ label, onPress, loading, disabled }: PrimaryButtonProps) {
+// The one solid action button style: masjid green, pill-shaped, with a
+// gentle press-shrink and haptic tick.
+export default function PrimaryButton({ label, onPress, loading, disabled, icon }: PrimaryButtonProps) {
   return (
-    <Pressable style={[styles.button, disabled && styles.buttonDisabled]} onPress={onPress} disabled={disabled || loading}>
-      {loading ? <ActivityIndicator color={theme.colors.textOnAccent} /> : <Text style={styles.text}>{label}</Text>}
-    </Pressable>
+    <PressableScale
+      style={[styles.button, theme.shadow.sm, disabled && styles.buttonDisabled]}
+      onPress={onPress}
+      disabled={disabled || loading}
+    >
+      {loading ? (
+        <ActivityIndicator color={theme.colors.textOnAccent} />
+      ) : (
+        <View style={styles.inner}>
+          {icon && <Icon name={icon} size={18} color={theme.colors.textOnAccent} />}
+          <Text style={styles.text}>{label}</Text>
+        </View>
+      )}
+    </PressableScale>
   );
 }
 
@@ -23,9 +37,12 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: theme.colors.accent,
     borderRadius: theme.radius.pill,
-    paddingVertical: 14,
+    paddingVertical: 15,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
   },
   buttonDisabled: { opacity: 0.45 },
-  text: { color: theme.colors.textOnAccent, fontSize: theme.typography.body, fontWeight: '600' },
+  inner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  text: { color: theme.colors.textOnAccent, fontSize: theme.typography.body, fontWeight: '700' },
 });

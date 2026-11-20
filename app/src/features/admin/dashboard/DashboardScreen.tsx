@@ -43,11 +43,14 @@ export default function DashboardScreen({ navigation }: Props) {
           <AdminActionRow
             title="Edit prayer timings"
             subtitle="Update Azan and Jamaat times"
+            icon="calendar-edit"
             onPress={() => navigation.navigate('EditTimetable')}
           />
           <AdminActionRow
             title="Manage announcements"
             subtitle="Create, edit, or remove announcements"
+            icon="bullhorn-outline"
+            tone="gold"
             onPress={() => navigation.navigate('AnnouncementList')}
           />
         </View>
@@ -58,5 +61,5 @@ export default function DashboardScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: theme.spacing.xl },
-  list: { paddingHorizontal: theme.spacing.lg },
+  list: { paddingHorizontal: theme.spacing.md },
 });

@@ -1,109 +1,122 @@
 // Single source of truth for all design tokens.
-// Change `accent` here to re-brand the entire app once Noor Masjid has real branding
-// (Folder Structure §3.1 / UI Wireframes §1) — nothing else in the app should
-// hardcode a color; every component reads from this file.
+// Every component reads colors, fonts, spacing and shadows from here, so a
+// re-brand is an edit to this file only (Folder Structure §3.1).
 
 import { Appearance } from 'react-native';
 
-// Determined once, at app launch, from the device's current system setting.
-// See prior note: not live-switching mid-session by design (see git history
-// / prior conversation) - a deliberate, documented trade-off.
+// Determined once at launch from the device setting (not live-switching
+// mid-session - a deliberate, documented trade-off).
 const isDarkMode = Appearance.getColorScheme() === 'dark';
 
-// Converted from the design system's OKLCH tokens to hex via actual color
-// math (React Native's style engine doesn't parse oklch() at all).
+// Palette: warm neutrals, masjid green for prayer moments and primary
+// actions, gold for announcements and the Hijri date. Nothing else is
+// colored, which is what keeps the app calm rather than busy.
 const lightColors = {
-  // Primary interactive accent = near-black, per the design system's
-  // explicit intent: keep masjid green reserved for prayer-identity
-  // moments only, not diluted as a generic "everything" color.
-  accent: '#050608',
-  accentHover: '#15161B',
-  accentSubtle: '#E8E9F2',
-  accentSubtleBorder: '#D5D7E1',
+  accent: '#0B4F30',
+  accentHover: '#083D25',
+  accentSubtle: '#E9EDE6',
+  accentSubtleBorder: '#D7DCD3',
 
-  // Islamic-identity accent = masjid green - the prayer countdown hero
-  // and the "next prayer" row highlight, and nothing else.
   prayer: '#156F41',
   prayerDark: '#03532D',
-  prayerSubtle: '#E3F8E9',
+  prayerDeep: '#01391F',
+  prayerSubtle: '#E3F5E8',
+  prayerBorder: '#BFE6CC',
   prayerSubtleText: '#03532D',
+  prayerOnDark: '#A9DDBC',
 
   surface: '#FFFFFF',
-  surfacePage: '#ECEFFE', // the lavender-tinted screen background from the design system
-  surfaceSunken: '#E8E9F2',
-  border: '#D5D7E1',
-  borderStrong: '#B5B6C2',
+  surfacePage: '#F4F5F0',
+  surfaceSunken: '#ECEEE7',
+  skeleton: '#E3E5DE',
+  border: '#E4E6DE',
+  borderStrong: '#C9CCC2',
 
-  textPrimary: '#050608',
-  textSecondary: '#46474F',
-  textTertiary: '#8A8B97',
+  textPrimary: '#101311',
+  textSecondary: '#545A54',
+  textTertiary: '#8A8F8A',
   textOnAccent: '#FFFFFF',
 
   danger: '#A83634',
-  dangerSubtle: '#FFEBE8',
+  dangerSubtle: '#FCEBE8',
   success: '#156F41',
-  successSubtle: '#E3F8E9',
+  successSubtle: '#E3F5E8',
 
-  toggleOff: '#B5B6C2',
+  toggleOff: '#C9CCC2',
 
-  // A third identity color, reserved for announcements specifically -
-  // distinct from both the near-black UI accent and the masjid-green
-  // prayer identity, matching EventCard.jsx's gold "special" tag treatment.
   accentGold: '#9C721C',
+  goldBright: '#E0B771',
+  goldSubtle: '#F8EFD9',
 
-  // Kept for any remaining reference during the transition - map to the
-  // closest equivalent in the new system rather than leaving them dangling.
-  accentTintLight: '#E3F8E9',
-  accentSoft: '#E3F8E9',
+  // Legacy aliases still referenced by a few components.
+  accentTintLight: '#E3F5E8',
+  accentSoft: '#E3F5E8',
   accentSoftText: '#03532D',
-  textMuted: '#8A8B97',
-  surfaceMuted: '#E8E9F2',
+  textMuted: '#8A8F8A',
+  surfaceMuted: '#ECEEE7',
 };
 
-const darkColors = {
-  accent: '#E8E9F2',
-  accentHover: '#D5D7E1',
-  accentSubtle: '#2C2D34',
-  accentSubtleBorder: '#46474F',
+const darkColors: typeof lightColors = {
+  accent: '#2F8F5B',
+  accentHover: '#3BA36A',
+  accentSubtle: '#1D221F',
+  accentSubtleBorder: '#2C332E',
 
   prayer: '#82C298',
-  prayerDark: '#C5EDD2',
-  prayerSubtle: '#0F2E1F',
-  prayerSubtleText: '#82C298',
+  prayerDark: '#0E5A35',
+  prayerDeep: '#063820',
+  prayerSubtle: '#12291C',
+  prayerBorder: '#1F4A30',
+  prayerSubtleText: '#9FDDB5',
+  prayerOnDark: '#A9DDBC',
 
-  surface: '#15161B',
-  surfacePage: '#0A0A0D',
-  surfaceSunken: '#1F2028',
-  border: '#2C2D34',
-  borderStrong: '#46474F',
+  surface: '#151917',
+  surfacePage: '#0B0D0C',
+  surfaceSunken: '#1D221F',
+  skeleton: '#202622',
+  border: '#262C28',
+  borderStrong: '#3A423D',
 
-  textPrimary: '#F4F5FB',
-  textSecondary: '#B5B6C2',
-  textTertiary: '#676872',
-  textOnAccent: '#050608',
+  textPrimary: '#F2F4F1',
+  textSecondary: '#B4BBB5',
+  textTertiary: '#737B75',
+  textOnAccent: '#FFFFFF',
 
   danger: '#E8837F',
   dangerSubtle: '#3A1F1E',
   success: '#82C298',
-  successSubtle: '#0F2E1F',
+  successSubtle: '#12291C',
 
-  toggleOff: '#46474F',
+  toggleOff: '#3A423D',
 
   accentGold: '#E0B771',
-  accentTintLight: '#0F2E1F',
-  accentSoft: '#0F2E1F',
-  accentSoftText: '#82C298',
-  textMuted: '#676872',
-  surfaceMuted: '#1F2028',
+  goldBright: '#E0B771',
+  goldSubtle: '#2C2413',
+
+  accentTintLight: '#12291C',
+  accentSoft: '#12291C',
+  accentSoftText: '#9FDDB5',
+  textMuted: '#737B75',
+  surfaceMuted: '#1D221F',
 };
 
 export const theme = {
+  isDark: isDarkMode,
   colors: isDarkMode ? darkColors : lightColors,
+  // Manrope, loaded in App.tsx. Components set fontWeight as usual; the
+  // shared <Text> maps the weight to the matching font file.
+  font: {
+    regular: 'Manrope_400Regular',
+    medium: 'Manrope_500Medium',
+    semibold: 'Manrope_600SemiBold',
+    bold: 'Manrope_700Bold',
+    extrabold: 'Manrope_800ExtraBold',
+  },
   radius: {
     sm: 10,
-    control: 14, // was 12 - matches the design system's radius-md
-    card: 20, // was 24 - matches radius-lg (the standard Card component)
-    heroCard: 28, // new - radius-xl, specifically for the prayer countdown hero
+    control: 14,
+    card: 20,
+    heroCard: 26,
     pill: 999,
   },
   spacing: {
@@ -116,28 +129,21 @@ export const theme = {
     xxl: 32,
   },
   typography: {
-    caption: 12, // was 13 - matches text-caption
-    label: 13, // new - text-label, 600 weight
+    caption: 12,
+    label: 13,
     body: 15,
-    bodyLg: 17, // new
-    title: 22, // matches text-h2
-    subheading: 17, // new - text-h3
-    heading: 28, // was 26 - matches text-h1
-    // The single most important number in the app, per the design
-    // system's own framing - deliberately large. Kept slightly smaller
-    // than the spec's 54px (which risks overflow once seconds are shown,
-    // per feedback item 7 - "HH:MM:SS" is a longer string than "H:MM").
-    countdown: 44,
-    countdownLabel: 14,
+    bodyLg: 17,
+    title: 20,
+    subheading: 17,
+    heading: 28,
+    countdown: 42,
+    countdownLabel: 12,
   },
   shadow: {
-    // React Native shadow props (iOS) + elevation (Android) bundled together,
-    // since RN doesn't support CSS box-shadow syntax directly.
-    sm: { shadowColor: '#2E2A50', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
-    md: { shadowColor: '#2E2A50', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.09, shadowRadius: 20, elevation: 6 },
-    lg: { shadowColor: '#2E2A50', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.16, shadowRadius: 45, elevation: 12 },
+    sm: { shadowColor: '#1B2A1F', shadowOffset: { width: 0, height: 2 }, shadowOpacity: isDarkMode ? 0 : 0.05, shadowRadius: 8, elevation: isDarkMode ? 0 : 1 },
+    md: { shadowColor: '#0B3D22', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 20, elevation: 8 },
+    lg: { shadowColor: '#0B3D22', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.22, shadowRadius: 40, elevation: 14 },
   },
 } as const;
 
 export type Theme = typeof theme;
-

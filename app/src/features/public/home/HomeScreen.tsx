@@ -1,20 +1,32 @@
-import { useEffect } from 'react';
-import { View, Text, ScrollView, AppState, StyleSheet } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, ScrollView, AppState, StyleSheet, RefreshControl } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import Text from '@/components/Text';
+import Icon from '@/components/Icon';
+import FadeIn from '@/components/FadeIn';
 import { theme } from '@/constants/theme';
+import { HIJRI_ADJUST_DAYS, type PrayerName } from '@/constants/masjid';
 import { useTimetableStore } from '@/store/timetableStore';
+import { useAnnouncementsStore } from '@/store/announcementsStore';
 import { useCountdown } from './useCountdown';
-import { getTodayPrayerTimes, getMasjidToday } from '@/utils/dateTime';
+import { getTodayPrayerTimes, getMasjidToday, getHijriDate, isPrayerDoneToday } from '@/utils/dateTime';
 import NextEventCard from './components/NextEventCard';
 import MasjidHeader from './components/MasjidHeader';
-import TimeRow from '@/components/TimeRow';
-import Card from '@/components/Card';
-import LoadingIndicator from '@/components/LoadingIndicator';
+import PrayerListRow, { type PrayerRowState } from './components/PrayerListRow';
+import LatestAnnouncementCard from './components/LatestAnnouncementCard';
+import HomeSkeleton from './components/HomeSkeleton';
 import OfflineBanner from '@/components/OfflineBanner';
+import PrimaryButton from '@/components/PrimaryButton';
 import ScreenContainer from '@/components/ScreenContainer';
+import type { PublicTabParamList } from '@/app/RootNavigator';
 
 export default function HomeScreen() {
-  const { timetable, masjid, status, error, fetch } = useTimetableStore();
+  const navigation = useNavigation<BottomTabNavigationProp<PublicTabParamList>>();
+  const { timetable, masjid, status, fetch } = useTimetableStore();
+  const { announcements, subscribe, unsubscribe } = useAnnouncementsStore();
   const countdown = useCountdown(timetable, masjid?.timezone);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetch();
@@ -24,66 +36,134 @@ export default function HomeScreen() {
     return () => subscription.remove();
   }, [fetch]);
 
-  if (status === 'error') {
+  useEffect(() => {
+    subscribe();
+    return () => unsubscribe();
+  }, [subscribe, unsubscribe]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetch();
+    setRefreshing(false);
+  }, [fetch]);
+
+  if (status === 'error' && !timetable) {
     return (
       <ScreenContainer style={styles.centered}>
-        <Text style={styles.errorTitle}>Couldn't load timings.</Text>
-        <Text style={styles.errorDetail}>{error}</Text>
+        <View style={styles.errorIcon}>
+          <Icon name="wifi-off" size={30} color={theme.colors.textSecondary} />
+        </View>
+        <Text style={styles.errorTitle}>Couldn't load prayer times</Text>
+        <Text style={styles.errorDetail}>Check your internet connection and try again.</Text>
+        <View style={styles.retry}>
+          <PrimaryButton label="Try again" icon="refresh" onPress={fetch} />
+        </View>
       </ScreenContainer>
     );
   }
 
   if (!timetable || !masjid) {
     return (
-      <ScreenContainer style={styles.centered}>
-        <LoadingIndicator label="Loading today's timings..." />
+      <ScreenContainer>
+        <HomeSkeleton />
       </ScreenContainer>
     );
   }
 
-  const today = getTodayPrayerTimes(timetable);
-  const todayDate = getMasjidToday(masjid.timezone).format('dddd, D MMMM');
+  const today = getMasjidToday(masjid.timezone);
+  const hijri = getHijriDate(today, HIJRI_ADJUST_DAYS);
+  const latest = announcements[0];
+
+  const rowState = (prayer: PrayerName): PrayerRowState => {
+    if (countdown?.event.prayer === prayer) return 'current';
+    return isPrayerDoneToday(timetable, prayer, masjid.timezone, countdown?.now) ? 'done' : 'upcoming';
+  };
+  const rows = getTodayPrayerTimes(timetable);
+  const badge = countdown?.event.kind === 'jamaat' ? 'NOW' : 'NEXT';
 
   return (
     <ScreenContainer>
-      <ScrollView contentContainerStyle={styles.content}>
-        <MasjidHeader name={masjid.name} dateLabel={todayDate} />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.prayer} colors={[theme.colors.prayer]} />
+        }
+      >
+        <FadeIn>
+          <MasjidHeader
+            name={masjid.name}
+            city={masjid.city}
+            dateLabel={today.format('dddd, D MMM')}
+            hijriLabel={`${hijri.day} ${hijri.month}`}
+          />
+        </FadeIn>
 
-        <Card style={styles.outerCard}>
-          {countdown && <NextEventCard event={countdown.event} countdownLabel={countdown.countdownLabel} />}
+        {countdown && (
+          <FadeIn delay={60}>
+            <NextEventCard event={countdown.event} countdownLabel={countdown.countdownLabel} progress={countdown.progress} />
+          </FadeIn>
+        )}
 
-          {status === 'offline-cached' && <OfflineBanner />}
+        {status === 'offline-cached' && <OfflineBanner />}
 
-          <Text style={styles.sectionLabel}>Today</Text>
+        <FadeIn delay={120}>
+          <View style={styles.listHeader}>
+            <Text style={styles.sectionLabel}>Today</Text>
+            <View style={styles.columnLabels}>
+              <Text style={styles.columnLabel}>Azan</Text>
+              <Text style={styles.columnLabel}>Jamaat</Text>
+            </View>
+          </View>
           <View style={styles.list}>
-            {today.map((row) => (
-              <TimeRow
+            {rows.map((row) => (
+              <PrayerListRow
                 key={row.prayer}
+                prayer={row.prayer}
                 label={row.label}
                 azan={row.azan}
                 jamaat={row.jamaat}
-                active={countdown?.event.prayer === row.prayer}
+                state={rowState(row.prayer)}
+                badge={badge}
               />
             ))}
           </View>
-        </Card>
+        </FadeIn>
+
+        {latest && (
+          <FadeIn delay={180}>
+            <LatestAnnouncementCard announcement={latest} onPress={() => navigation.navigate('Announcements')} />
+          </FadeIn>
+        )}
       </ScrollView>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: theme.spacing.md, paddingBottom: theme.spacing.xl },
-  centered: { alignItems: 'center', justifyContent: 'center' },
-  outerCard: { paddingTop: theme.spacing.lg, paddingBottom: theme.spacing.md },
-  sectionLabel: {
-    fontSize: theme.typography.title,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+  content: { paddingBottom: theme.spacing.xl },
+  centered: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: theme.spacing.xl },
+  listHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.lg + 4,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.sm,
   },
-  list: { paddingHorizontal: theme.spacing.lg },
-  errorTitle: { fontSize: theme.typography.body, fontWeight: '500', color: theme.colors.textPrimary, textAlign: 'center' },
-  errorDetail: { fontSize: 12, color: theme.colors.textSecondary, textAlign: 'center', marginTop: 8, paddingHorizontal: theme.spacing.lg },
+  sectionLabel: { fontSize: theme.typography.title, fontWeight: '800', color: theme.colors.textPrimary },
+  columnLabels: { flexDirection: 'row' },
+  columnLabel: { width: 70, textAlign: 'right', fontSize: 11, fontWeight: '700', color: theme.colors.textTertiary, letterSpacing: 0.4 },
+  list: { paddingHorizontal: theme.spacing.sm3, marginBottom: theme.spacing.md },
+  errorIcon: {
+    width: 68,
+    height: 68,
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceSunken,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  errorTitle: { fontSize: theme.typography.subheading, fontWeight: '700', color: theme.colors.textPrimary, textAlign: 'center' },
+  errorDetail: { fontSize: theme.typography.body, color: theme.colors.textSecondary, textAlign: 'center', marginTop: 6 },
+  retry: { alignSelf: 'stretch', marginTop: theme.spacing.xl },
 });

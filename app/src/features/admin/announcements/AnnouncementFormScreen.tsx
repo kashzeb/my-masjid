@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ScrollView, Text, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import Text from '@/components/Text';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { theme } from '@/constants/theme';
@@ -96,6 +97,7 @@ export default function AnnouncementFormScreen({ route, navigation }: Props) {
 
           <PrimaryButton
             label={isEditing ? 'Save changes' : 'Publish announcement'}
+            icon={isEditing ? 'content-save-outline' : 'send-outline'}
             onPress={handleSubmit(onSubmit)}
             loading={submitting}
           />
@@ -117,9 +119,10 @@ const styles = StyleSheet.create({
   content: { padding: theme.spacing.md, paddingBottom: theme.spacing.xxl * 3 },
   heading: {
     fontSize: theme.typography.heading,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: theme.colors.textPrimary,
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
     marginBottom: theme.spacing.lg,
   },
   bodyInput: { minHeight: 120, textAlignVertical: 'top' },

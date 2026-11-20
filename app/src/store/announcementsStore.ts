@@ -7,6 +7,7 @@ interface AnnouncementsState {
   status: 'idle' | 'loading' | 'loaded' | 'error';
   error: string | null;
   unsubscribeFn: (() => void) | null;
+  subscribers: number;
   subscribe: () => void;
   unsubscribe: () => void;
 }
@@ -16,10 +17,13 @@ export const useAnnouncementsStore = create<AnnouncementsState>((set, get) => ({
   status: 'idle',
   error: null,
   unsubscribeFn: null,
+  subscribers: 0,
 
+  // Reference-counted: Home (latest announcement preview) and the
+  // Announcements tab share one Firestore listener, which is only closed
+  // when the last of them unsubscribes.
   subscribe: () => {
-    // Guard against double-subscribing (e.g. the screen re-mounting on tab
-    // focus while a listener from before is still active).
+    set((s) => ({ subscribers: s.subscribers + 1 }));
     if (get().unsubscribeFn) return;
     set({ status: 'loading' });
     const unsubscribeFn = subscribeToAnnouncements(
@@ -30,6 +34,9 @@ export const useAnnouncementsStore = create<AnnouncementsState>((set, get) => ({
   },
 
   unsubscribe: () => {
+    const remaining = Math.max(0, get().subscribers - 1);
+    set({ subscribers: remaining });
+    if (remaining > 0) return;
     get().unsubscribeFn?.();
     set({ unsubscribeFn: null });
   },

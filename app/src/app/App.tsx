@@ -1,9 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { registerRootComponent } from 'expo';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
+import {
+  useFonts,
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
 import RootNavigator from './RootNavigator';
 import ToastHost from '@/components/ToastHost';
 import SplashOverlay from '@/components/SplashOverlay';
@@ -28,10 +36,25 @@ function getAnnouncementsPreference(): Promise<boolean> {
 // called at module load, before the component even renders.
 SplashScreen.preventAutoHideAsync();
 
-const SPLASH_MIN_DURATION_MS = 4000;
+const SPLASH_MIN_DURATION_MS = 2200;
 
 function App() {
   const [showIntro, setShowIntro] = useState(true);
+  const [fontsLoaded, fontError] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+  const ready = fontsLoaded || !!fontError;
+  const hideIntro = useCallback(() => setShowIntro(false), []);
+
+  // Keep the native splash up until the fonts are ready (a fraction of a
+  // second, bundled locally), so text never flashes in the system font.
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
 
   useEffect(() => {
     // Requested on launch per PRD - the standard OS permission prompt.
@@ -48,25 +71,18 @@ function App() {
       navigateFromNotificationData(response.notification.request.content.data as Record<string, unknown>);
     });
 
-    // Hide the native splash immediately (our custom overlay below takes
-    // over visually with zero gap), then keep the custom intro up for a
-    // short fixed duration - deliberately NOT tied to any network fetch,
-    // so it can never hang if the connection is slow or offline.
-    SplashScreen.hideAsync();
-    const timer = setTimeout(() => setShowIntro(false), SPLASH_MIN_DURATION_MS);
-
-    return () => {
-      subscription.remove();
-      clearTimeout(timer);
-    };
+    return () => subscription.remove();
   }, []);
+
+  if (!ready) return null;
 
   return (
     <SafeAreaProvider>
       <StatusBar style="auto" />
       <RootNavigator />
       <ToastHost />
-      {showIntro && <SplashOverlay />}
+      {/* Fixed-duration intro, never tied to a network fetch, so it can't hang offline. */}
+      {showIntro && <SplashOverlay holdMs={SPLASH_MIN_DURATION_MS} onFinish={hideIntro} />}
     </SafeAreaProvider>
   );
 }

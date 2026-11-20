@@ -1,47 +1,64 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Text from '@/components/Text';
+import Icon from '@/components/Icon';
 import { theme } from '@/constants/theme';
 import { useToastStore } from '@/store/toastStore';
 
 /**
- * Mounted once, in App.tsx, above the navigator - renders whatever's
- * currently in the toast store. Anywhere in the app can call
- * showToast('message') without needing to render anything itself.
+ * Mounted once in App.tsx above the navigator. Anywhere in the app can call
+ * showToast('message'); the toast slides down from the top and fades in.
  */
 export default function ToastHost() {
   const { message, variant } = useToastStore();
+  const insets = useSafeAreaInsets();
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!message) return;
+    progress.setValue(0);
+    Animated.spring(progress, { toValue: 1, useNativeDriver: true, speed: 18, bounciness: 7 }).start();
+  }, [message, progress]);
+
   if (!message) return null;
 
   const tone =
     variant === 'success'
-      ? { bg: theme.colors.successSubtle, text: theme.colors.prayerDark, accent: theme.colors.prayer }
+      ? { icon: 'check-circle' as const, color: theme.colors.prayer }
       : variant === 'danger'
-        ? { bg: theme.colors.dangerSubtle, text: theme.colors.danger, accent: theme.colors.danger }
-        : { bg: theme.colors.surface, text: theme.colors.textPrimary, accent: theme.colors.borderStrong };
+        ? { icon: 'alert-circle-outline' as const, color: theme.colors.danger }
+        : { icon: 'information-outline' as const, color: theme.colors.textSecondary };
+
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] });
 
   return (
-    <View style={styles.wrapper} pointerEvents="none">
-      <View style={[styles.toast, { backgroundColor: tone.bg, borderLeftColor: tone.accent }, theme.shadow.md]}>
-        <Text style={[styles.text, { color: tone.text }]}>{message}</Text>
-      </View>
-    </View>
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.wrapper, { top: insets.top + 8, opacity: progress, transform: [{ translateY }] }]}
+    >
+      <Animated.View style={[styles.toast, theme.shadow.md]}>
+        <Icon name={tone.icon} size={19} color={tone.color} />
+        <Text style={styles.text}>{message}</Text>
+      </Animated.View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    position: 'absolute',
-    top: 56,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 999,
-  },
+  wrapper: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 999 },
   toast: {
-    borderLeftWidth: 3,
-    borderRadius: theme.radius.control,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    maxWidth: '85%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    paddingVertical: 11,
+    paddingLeft: 14,
+    paddingRight: 18,
+    maxWidth: '88%',
   },
-  text: { fontSize: theme.typography.label, fontWeight: '500' },
+  text: { fontSize: theme.typography.label, fontWeight: '700', color: theme.colors.textPrimary },
 });

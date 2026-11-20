@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ScrollView, Text, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import Text from '@/components/Text';
+import Icon from '@/components/Icon';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -69,6 +71,9 @@ export default function LoginScreen({ navigation }: Props) {
         keyboardVerticalOffset={Platform.OS === 'android' ? 80 : 0}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.lockBadge}>
+            <Icon name="shield-account-outline" size={30} color={theme.colors.prayerOnDark} />
+          </View>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>Sign in to manage timings and announcements</Text>
 
@@ -104,7 +109,7 @@ export default function LoginScreen({ navigation }: Props) {
 
             {formError && <Text style={styles.formError}>{formError}</Text>}
 
-            <PrimaryButton label="Log in" onPress={handleSubmit(onSubmit)} loading={submitting} />
+            <PrimaryButton label="Sign in" icon="lock-outline" onPress={handleSubmit(onSubmit)} loading={submitting} />
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -115,8 +120,18 @@ export default function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { flexGrow: 1, justifyContent: 'center', padding: theme.spacing.xl },
-  title: { fontSize: theme.typography.heading, fontWeight: '700', color: theme.colors.textPrimary, marginBottom: 6, textAlign: 'center' },
-  subtitle: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, marginBottom: theme.spacing.xl, textAlign: 'center' },
+  lockBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: theme.colors.prayerDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  title: { fontSize: 24, fontWeight: '800', color: theme.colors.textPrimary, marginBottom: 6, textAlign: 'center', letterSpacing: -0.4 },
+  subtitle: { fontSize: theme.typography.body, color: theme.colors.textSecondary, marginBottom: theme.spacing.xl, textAlign: 'center' },
   card: { padding: theme.spacing.lg },
   formError: { color: theme.colors.danger, fontSize: theme.typography.caption, marginBottom: theme.spacing.md, textAlign: 'center' },
 });

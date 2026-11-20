@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import Text from '@/components/Text';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { theme } from '@/constants/theme';
@@ -92,7 +93,7 @@ export default function EditTimetableScreen({ navigation }: Props) {
             <PrayerTimetableFormRow key={prayer} prayer={prayer} label={PRAYER_LABELS[prayer]} control={control} />
           ))}
 
-          <PrimaryButton label="Save timetable" onPress={handleSubmit(onSubmit)} loading={submitting} />
+          <PrimaryButton label="Save timetable" icon="content-save-outline" onPress={handleSubmit(onSubmit)} loading={submitting} />
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: theme.spacing.md, paddingBottom: theme.spacing.xxl * 3 },
   centered: { alignItems: 'center', justifyContent: 'center' },
-  heading: { fontSize: theme.typography.heading, fontWeight: '700', color: theme.colors.textPrimary, paddingHorizontal: theme.spacing.sm, marginBottom: 4 },
-  subheading: { fontSize: theme.typography.caption, color: theme.colors.textSecondary, paddingHorizontal: theme.spacing.sm, marginBottom: theme.spacing.lg },
+  heading: { fontSize: theme.typography.heading, fontWeight: '800', color: theme.colors.textPrimary, letterSpacing: -0.5, paddingHorizontal: theme.spacing.xs, marginBottom: 4 },
+  subheading: { fontSize: theme.typography.body, color: theme.colors.textSecondary, paddingHorizontal: theme.spacing.xs, marginBottom: theme.spacing.lg },
   note: { fontSize: theme.typography.caption, color: theme.colors.textSecondary },
 });

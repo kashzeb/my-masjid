@@ -1,5 +1,7 @@
-import { Pressable, View, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Pressable, StyleSheet } from 'react-native';
 import { theme } from '@/constants/theme';
+import { tapHaptic } from '@/utils/haptics';
 
 interface ToggleProps {
   value: boolean;
@@ -7,40 +9,59 @@ interface ToggleProps {
   disabled?: boolean;
 }
 
-// "On" state uses the general UI accent (near-black), not the masjid green -
-// a toggle switch isn't a prayer-identity moment, per the design system's
-// explicit reservation of green for the countdown hero and next-prayer row.
+const SIZE = { width: 50, height: 30, thumb: 24, pad: 3 };
+
+// Large, high-contrast switch (elderly-friendly target size) whose thumb
+// slides and track color fades between states.
 export default function Toggle({ value, onValueChange, disabled }: ToggleProps) {
+  const progress = useRef(new Animated.Value(value ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(progress, { toValue: value ? 1 : 0, useNativeDriver: false, speed: 22, bounciness: 6 }).start();
+  }, [value, progress]);
+
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, SIZE.width - SIZE.thumb - SIZE.pad * 2] });
+  const backgroundColor = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [theme.colors.toggleOff, theme.colors.accent],
+  });
+
   return (
     <Pressable
-      onPress={() => !disabled && onValueChange(!value)}
+      onPress={() => {
+        if (disabled) return;
+        tapHaptic();
+        onValueChange(!value);
+      }}
       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      style={[styles.track, value && styles.trackOn, disabled && styles.trackDisabled]}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled }}
     >
-      <View style={[styles.thumb, value && styles.thumbOn]} />
+      <Animated.View style={[styles.track, { backgroundColor }, disabled && styles.trackDisabled]}>
+        <Animated.View style={[styles.thumb, { transform: [{ translateX }] }]} />
+      </Animated.View>
     </Pressable>
   );
 }
-
-const SIZE = { width: 40, height: 24, thumb: 18 };
 
 const styles = StyleSheet.create({
   track: {
     width: SIZE.width,
     height: SIZE.height,
     borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.toggleOff,
+    padding: SIZE.pad,
     justifyContent: 'center',
   },
-  trackOn: { backgroundColor: theme.colors.accent },
   trackDisabled: { opacity: 0.4 },
   thumb: {
     width: SIZE.thumb,
     height: SIZE.thumb,
     borderRadius: SIZE.thumb / 2,
-    backgroundColor: theme.colors.surface,
-    marginLeft: 3,
-    ...theme.shadow.sm,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  thumbOn: { marginLeft: SIZE.width - SIZE.thumb - 3 },
 });

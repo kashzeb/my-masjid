@@ -16,6 +16,21 @@ export const PRAYER_LABELS: Record<PrayerName, string> = {
 
 // FCM topic for announcements only — prayer categories are local-only toggles,
 // per the hybrid notification architecture (Architecture §4.3/§4.4).
+import type { IconName } from '@/components/Icon';
+
+export const PRAYER_ICONS: Record<PrayerName, IconName> = {
+  fajr: 'weather-sunset-up',
+  zuhr: 'white-balance-sunny',
+  asr: 'weather-sunny',
+  maghrib: 'weather-sunset-down',
+  isha: 'weather-night',
+};
+
+// Days to add to the calculated Hijri date so it matches the Masjid's
+// moon-sighted date. India usually begins each month a day after the
+// arithmetic calendar (e.g. Ramadan 1446 began 2 Mar 2025, not 1 Mar).
+export const HIJRI_ADJUST_DAYS = -1;
+
 export const ANNOUNCEMENTS_TOPIC = 'announcements';
 
 // How many days ahead local prayer notifications are scheduled.
