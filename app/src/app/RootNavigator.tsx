@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavigationContainer, type NavigatorScreenParams } from '@react-navigation/native';
+import { NavigationContainer, StackActions, type NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { theme } from '@/constants/theme';
@@ -89,13 +88,6 @@ const tabStyles = StyleSheet.create({
 });
 
 function PublicTabs() {
-  // Bumping the key on `blur` needed a second tab press to actually take
-  // effect - the remount was scheduled but not committed in time for the
-  // very next render. Bumping it synchronously in `tabPress`, checked
-  // against whether Settings is ALREADY focused, fixes the timing: the
-  // fresh key is set as part of the same interaction that navigates back
-  // in, not a step behind it.
-  const [settingsResetKey, setSettingsResetKey] = useState(0);
   const insets = useSafeAreaInsets();
 
   return (
@@ -106,11 +98,12 @@ function PublicTabs() {
         animation: 'fade',
         tabBarActiveTintColor: theme.colors.prayerSubtleText,
         tabBarInactiveTintColor: theme.colors.textTertiary,
-        tabBarLabelStyle: { fontFamily: fontFor('700'), fontSize: 11, marginTop: 2 },
+        tabBarLabelStyle: { fontFamily: fontFor('700'), fontSize: 11, marginTop: 4 },
+        tabBarItemStyle: { height: 58 },
         tabBarStyle: {
-          height: 66 + insets.bottom,
-          paddingTop: 8,
-          paddingBottom: insets.bottom + 8,
+          height: 70 + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: insets.bottom + 6,
           backgroundColor: theme.colors.surface,
           borderTopWidth: 1,
           borderTopColor: theme.colors.border,
@@ -123,16 +116,21 @@ function PublicTabs() {
       <Tab.Screen name="Announcements" component={AnnouncementsScreen} options={{ tabBarLabel: 'Updates' }} />
       <Tab.Screen
         name="Settings"
+        component={SettingsStackNavigator}
         listeners={({ navigation }) => ({
-          tabPress: () => {
-            if (!navigation.isFocused()) {
-              setSettingsResetKey((k) => k + 1);
+          // Leaving the Settings tab (another tab, "Go to Home" after a save,
+          // or a notification tap) rewinds its stack to the Settings screen,
+          // so coming back always lands on Settings - never on a half-finished
+          // admin form. Tapping Settings while already inside it also returns
+          // to the top (the tab navigator's built-in behaviour).
+          blur: () => {
+            const settingsState = navigation.getState().routes.find((r) => r.name === 'Settings')?.state;
+            if (settingsState?.key && (settingsState.index ?? 0) > 0) {
+              navigation.dispatch({ ...StackActions.popToTop(), target: settingsState.key });
             }
           },
         })}
-      >
-        {() => <SettingsStackNavigator key={settingsResetKey} />}
-      </Tab.Screen>
+      />
     </Tab.Navigator>
   );
 }
