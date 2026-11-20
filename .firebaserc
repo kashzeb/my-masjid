@@ -1,6 +1,7 @@
 {
   "projects": {
-    "dev": "my-masjid-dev"
+    "dev": "my-masjid-dev",
+    "prod": "my-masjid-prod"
   },
   "targets": {},
   "etags": {}
