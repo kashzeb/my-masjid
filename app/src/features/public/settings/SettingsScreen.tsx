@@ -157,16 +157,4 @@ const styles = StyleSheet.create({
   rowLast: { marginBottom: 0 },
   rowLabel: { fontSize: theme.typography.body, color: theme.colors.textPrimary },
   rowNote: { fontSize: 11, color: theme.colors.textTertiary, marginTop: 2, maxWidth: 220 },
-  adminButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.control,
-    paddingVertical: 16,
-    paddingHorizontal: theme.spacing.md,
-  },
-  adminButtonText: { fontSize: theme.typography.body, fontWeight: '600', color: theme.colors.textPrimary },
-  adminButtonChevron: { fontSize: 22, color: theme.colors.textTertiary },
 });
